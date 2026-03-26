@@ -6,15 +6,22 @@ import {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const DEFAULT_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc3am4UpZjqNJx9i5asqyEn-AI51cqKSPKvjV89ujSi_4FnDDgxw5gbc6dk2hnX4HK3o52aqm6DUDW/pub?output=csv";
-const LS_URL_KEY = "dashboard_sheet_url";
-// Try direct first, fall back to CORS proxies
+const DEFAULT_API_RANGE     = "A1:ZZ";
+// localStorage keys
+const LS_URL_KEY    = "dashboard_sheet_url";
+const LS_MODE_KEY   = "dashboard_source_mode";   // "csv" | "api"
+const LS_API_ID_KEY = "dashboard_api_sheet_id";
+const LS_API_KEY    = "dashboard_api_key";
+const LS_API_RANGE  = "dashboard_api_range";
+// Try direct first, fall back to CORS proxies (CSV mode only)
 const PROXIES = [
-  url => url,                                                      // direct
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,      // proxy 1
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, // proxy 2
+  url => url,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 ];
 const POLL_MS = 30_000;
 
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
 async function fetchCSV(sheetUrl) {
   let lastErr;
   for (const proxy of PROXIES) {
@@ -31,7 +38,24 @@ async function fetchCSV(sheetUrl) {
   throw lastErr;
 }
 
-// ── CSV Parser ────────────────────────────────────────────────────────────────
+// Fetches rows directly from the Google Sheets API v4 (real-time, no caching).
+// The spreadsheet must be shared as "Anyone with the link can view".
+// Returns a 2-D array of cell strings, same shape as the parsed CSV rows.
+async function fetchSheetsAPI(spreadsheetId, apiKey, range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    let msg = `Sheets API HTTP ${res.status}`;
+    try { const j = await res.json(); msg = j?.error?.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const json = await res.json();
+  if (json.error) throw new Error(json.error.message);
+  return json.values || [];
+}
+
+// ── Sheet parser ──────────────────────────────────────────────────────────────
+// Shared by both CSV and API paths.
 // Sheet layout:
 //   Row 0: header  ["", "1-Mar", "2-Mar", ..., "Total", "", "Annual"]
 //   Row 1: TD row1   visit counts
@@ -40,23 +64,11 @@ async function fetchCSV(sheetUrl) {
 //   Row 4: MDL row2
 //   Row 5: RO
 //   Row 6: Total   daily revenue
-function parseCSV(text) {
-  const parseRow = line => {
-    const cells = []; let cur = "", inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; continue; }
-      if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ""; }
-      else cur += ch;
-    }
-    cells.push(cur.trim());
-    return cells;
-  };
-
-  const rows = text.trim().split(/\r?\n/).map(parseRow);
+function parseRows(rows) {
   if (rows.length < 7) return null;
 
   const [header, td1, mdl1, td2, mdl2, ro, totals] = rows;
-  const totalIdx = header.findIndex(h => h.toLowerCase() === "total");
+  const totalIdx = header.findIndex(h => (h || "").toLowerCase() === "total");
   if (totalIdx < 0) return null;
 
   const n = s => parseFloat((s || "0").replace(/[$,]/g, "")) || 0;
@@ -86,6 +98,20 @@ function parseCSV(text) {
   const avgDailyRev  = daysLogged ? Math.round(monthly.revenue / daysLogged) : 0;
 
   return { daily, monthly, currentMonth, daysLogged, avgDailyRev };
+}
+
+function parseCSVText(text) {
+  const parseRow = line => {
+    const cells = []; let cur = "", inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ""; }
+      else cur += ch;
+    }
+    cells.push(cur.trim());
+    return cells;
+  };
+  return parseRows(text.trim().split(/\r?\n/).map(parseRow));
 }
 
 // ── Historical data ───────────────────────────────────────────────────────────
@@ -168,21 +194,43 @@ export default function Dashboard() {
   const [errMsg,       setErrMsg]       = useState("");
   const [lastUpdate,   setLastUpdate]   = useState(null);
   const [countdown,    setCountdown]    = useState(POLL_MS/1000);
-  const [sheetUrl,     setSheetUrl]     = useState(
-    () => localStorage.getItem(LS_URL_KEY) || DEFAULT_SHEET_CSV_URL
-  );
-  const [showSettings, setShowSettings] = useState(false);
-  const [draftUrl,     setDraftUrl]     = useState(sheetUrl);
+
+  // ── Source config (persisted in localStorage) ────────────────────────────
+  const [srcMode,    setSrcMode]    = useState(() => localStorage.getItem(LS_MODE_KEY)   || "csv");
+  const [sheetUrl,   setSheetUrl]   = useState(() => localStorage.getItem(LS_URL_KEY)    || DEFAULT_SHEET_CSV_URL);
+  const [apiSheetId, setApiSheetId] = useState(() => localStorage.getItem(LS_API_ID_KEY) || "");
+  const [apiKey,     setApiKey]     = useState(() => localStorage.getItem(LS_API_KEY)    || "");
+  const [apiRange,   setApiRange]   = useState(() => localStorage.getItem(LS_API_RANGE)  || DEFAULT_API_RANGE);
+
+  // ── Settings panel UI state ──────────────────────────────────────────────
+  const [showSettings,  setShowSettings]  = useState(false);
+  const [draftMode,     setDraftMode]     = useState(srcMode);
+  const [draftUrl,      setDraftUrl]      = useState(sheetUrl);
+  const [draftSheetId,  setDraftSheetId]  = useState(apiSheetId);
+  const [draftApiKey,   setDraftApiKey]   = useState(apiKey);
+  const [draftApiRange, setDraftApiRange] = useState(apiRange);
+
   const pollRef = useRef(null);
   const cdRef   = useRef(null);
 
-  const load = useCallback(async (url) => {
-    const activeUrl = url || sheetUrl;
+  // ── Core fetch / parse ───────────────────────────────────────────────────
+  const load = useCallback(async (overrides = {}) => {
+    const mode  = overrides.mode    ?? srcMode;
+    const url   = overrides.url     ?? sheetUrl;
+    const id    = overrides.id      ?? apiSheetId;
+    const key   = overrides.key     ?? apiKey;
+    const range = overrides.range   ?? apiRange;
     try {
       setStatus(s => s === "live" ? "live" : "loading");
-      const text   = await fetchCSV(activeUrl);
-      const parsed = parseCSV(text);
-      if (!parsed) throw new Error("CSV parsed but structure not recognised");
+      let parsed;
+      if (mode === "api") {
+        const rows = await fetchSheetsAPI(id, key, range || DEFAULT_API_RANGE);
+        parsed = parseRows(rows);
+      } else {
+        const text = await fetchCSV(url);
+        parsed = parseCSVText(text);
+      }
+      if (!parsed) throw new Error("Data fetched but sheet structure not recognised");
       setLiveData(parsed);
       setStatus("live");
       setLastUpdate(new Date());
@@ -192,7 +240,7 @@ export default function Dashboard() {
       setStatus("error");
       setErrMsg(e.message);
     }
-  }, [sheetUrl]);
+  }, [srcMode, sheetUrl, apiSheetId, apiKey, apiRange]);
 
   useEffect(() => {
     load();
@@ -200,29 +248,50 @@ export default function Dashboard() {
     return () => clearInterval(pollRef.current);
   }, [load]);
 
-  const saveSettings = async () => {
-    const trimmed = draftUrl.trim();
-    if (!trimmed) return;
-    localStorage.setItem(LS_URL_KEY, trimmed);
-    setSheetUrl(trimmed);
+  // ── Settings save / reset ────────────────────────────────────────────────
+  const restartPolling = async (cfg) => {
     setShowSettings(false);
     setStatus("loading");
     setLiveData(null);
     clearInterval(pollRef.current);
-    await load(trimmed);
-    pollRef.current = setInterval(() => load(trimmed), POLL_MS);
+    await load(cfg);
+    pollRef.current = setInterval(() => load(cfg), POLL_MS);
+  };
+
+  const saveSettings = async () => {
+    const next = {
+      mode:  draftMode,
+      url:   draftUrl.trim(),
+      id:    draftSheetId.trim(),
+      key:   draftApiKey.trim(),
+      range: draftApiRange.trim() || DEFAULT_API_RANGE,
+    };
+    if (next.mode === "csv" && !next.url) return;
+    if (next.mode === "api" && (!next.id || !next.key)) return;
+
+    localStorage.setItem(LS_MODE_KEY,   next.mode);
+    localStorage.setItem(LS_URL_KEY,    next.url);
+    localStorage.setItem(LS_API_ID_KEY, next.id);
+    localStorage.setItem(LS_API_KEY,    next.key);
+    localStorage.setItem(LS_API_RANGE,  next.range);
+
+    setSrcMode(next.mode);
+    setSheetUrl(next.url);
+    setApiSheetId(next.id);
+    setApiKey(next.key);
+    setApiRange(next.range);
+    await restartPolling(next);
   };
 
   const resetSettings = async () => {
-    localStorage.removeItem(LS_URL_KEY);
-    setDraftUrl(DEFAULT_SHEET_CSV_URL);
-    setSheetUrl(DEFAULT_SHEET_CSV_URL);
-    setShowSettings(false);
-    setStatus("loading");
-    setLiveData(null);
-    clearInterval(pollRef.current);
-    await load(DEFAULT_SHEET_CSV_URL);
-    pollRef.current = setInterval(() => load(DEFAULT_SHEET_CSV_URL), POLL_MS);
+    [LS_MODE_KEY, LS_URL_KEY, LS_API_ID_KEY, LS_API_KEY, LS_API_RANGE].forEach(k => localStorage.removeItem(k));
+    const defaults = { mode:"csv", url:DEFAULT_SHEET_CSV_URL, id:"", key:"", range:DEFAULT_API_RANGE };
+    setSrcMode(defaults.mode);   setDraftMode(defaults.mode);
+    setSheetUrl(defaults.url);   setDraftUrl(defaults.url);
+    setApiSheetId(defaults.id);  setDraftSheetId(defaults.id);
+    setApiKey(defaults.key);     setDraftApiKey(defaults.key);
+    setApiRange(defaults.range); setDraftApiRange(defaults.range);
+    await restartPolling(defaults);
   };
 
   useEffect(() => {
@@ -418,10 +487,15 @@ export default function Dashboard() {
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={()=>{setDraftUrl(sheetUrl);setShowSettings(s=>!s);}}
-            style={{background:"transparent",border:`1px solid ${C.border}`,
+          <button onClick={()=>{
+              setDraftMode(srcMode); setDraftUrl(sheetUrl);
+              setDraftSheetId(apiSheetId); setDraftApiKey(apiKey); setDraftApiRange(apiRange);
+              setShowSettings(s=>!s);
+            }}
+            style={{background:showSettings?C.accent:"transparent",
+            border:`1px solid ${showSettings?C.accent:C.border}`,
             borderRadius:20,padding:"5px 14px",cursor:"pointer",fontFamily:FONT,
-            fontSize:11,color:C.subtext,outline:"none"}}>
+            fontSize:11,color:showSettings?"#fff":C.subtext,outline:"none"}}>
             ⚙ Data source
           </button>
           <button onClick={()=>load()} style={{background:"transparent",border:`1px solid ${C.border}`,
@@ -439,47 +513,118 @@ export default function Dashboard() {
       </div>
 
       {/* Settings panel */}
-      {showSettings && (
-        <div style={{background:"#0d1928",border:`1px solid ${C.border}`,borderRadius:12,
-          padding:"18px 20px",marginTop:12,marginBottom:4}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#e8f0fc",marginBottom:10}}>
-            📊 Spreadsheet Data Source
-          </div>
-          <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
-            Paste the <strong style={{color:C.subtext}}>published-as-CSV</strong> URL from your Google Sheet
-            (File → Share → Publish to web → CSV).
-          </div>
-          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            <input
-              value={draftUrl}
-              onChange={e=>setDraftUrl(e.target.value)}
-              placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv"
-              style={{flex:1,minWidth:260,background:"#162032",border:`1px solid ${C.border}`,
-                borderRadius:8,padding:"8px 12px",color:C.text,fontFamily:FONT,fontSize:11,outline:"none"}}
-            />
-            <button onClick={saveSettings}
-              style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,
-                padding:"8px 18px",cursor:"pointer",fontFamily:FONT,fontSize:11,fontWeight:700}}>
-              Save &amp; reload
-            </button>
-            <button onClick={resetSettings}
-              style={{background:"transparent",color:C.muted,border:`1px solid ${C.border}`,
-                borderRadius:8,padding:"8px 14px",cursor:"pointer",fontFamily:FONT,fontSize:11}}>
-              Reset to default
-            </button>
-            <button onClick={()=>setShowSettings(false)}
-              style={{background:"transparent",color:C.muted,border:"none",
-                padding:"8px 6px",cursor:"pointer",fontFamily:FONT,fontSize:13}}>
-              ✕
-            </button>
-          </div>
-          {sheetUrl !== DEFAULT_SHEET_CSV_URL && (
-            <div style={{marginTop:8,fontSize:10,color:C.roman}}>
-              ● Using custom source · <span style={{color:C.muted,wordBreak:"break-all"}}>{sheetUrl}</span>
+      {showSettings && (() => {
+        const inp = extra => ({
+          style:{width:"100%",boxSizing:"border-box",background:"#162032",
+            border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 12px",
+            color:C.text,fontFamily:FONT,fontSize:11,outline:"none",...extra}
+        });
+        const canSave = draftMode === "api"
+          ? draftSheetId.trim() && draftApiKey.trim()
+          : draftUrl.trim();
+        return (
+          <div style={{background:"#0d1928",border:`1px solid ${C.border}`,borderRadius:12,
+            padding:"18px 20px",marginTop:12,marginBottom:4}}>
+            {/* Header row */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e8f0fc"}}>📊 Spreadsheet Data Source</div>
+              <button onClick={()=>setShowSettings(false)}
+                style={{background:"transparent",color:C.muted,border:"none",
+                  cursor:"pointer",fontFamily:FONT,fontSize:16,lineHeight:1}}>✕</button>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Mode switcher */}
+            <div style={{display:"flex",gap:6,marginBottom:16}}>
+              {[["csv","Published CSV URL"],["api","Google Sheets API v4 ⚡"]].map(([m,label])=>(
+                <button key={m} onClick={()=>setDraftMode(m)}
+                  style={{background:draftMode===m?C.accent:"transparent",
+                    color:draftMode===m?"#fff":C.subtext,
+                    border:`1px solid ${draftMode===m?C.accent:C.border}`,
+                    borderRadius:20,padding:"5px 16px",cursor:"pointer",
+                    fontFamily:FONT,fontSize:11,fontWeight:draftMode===m?700:400,outline:"none"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {draftMode === "csv" ? (
+              <div>
+                <div style={{fontSize:11,color:C.muted,marginBottom:8}}>
+                  Paste the <strong style={{color:C.subtext}}>published-as-CSV</strong> URL
+                  (Google Sheet → File → Share → Publish to web → CSV).
+                  Note: published CSVs may cache for 5–15 min.
+                </div>
+                <input value={draftUrl} onChange={e=>setDraftUrl(e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv"
+                  {...inp()}/>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
+                  Connects directly to your live sheet via the{" "}
+                  <strong style={{color:C.subtext}}>Google Sheets API v4</strong> — truly real-time,
+                  no caching, no CORS proxy needed. Your sheet must be shared as
+                  <em style={{color:C.subtext}}> "Anyone with the link can view"</em>.
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:10,color:C.muted,marginBottom:4,letterSpacing:.5}}>SPREADSHEET ID</div>
+                    <input value={draftSheetId} onChange={e=>setDraftSheetId(e.target.value)}
+                      placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+                      {...inp()}/>
+                    <div style={{fontSize:10,color:C.muted,marginTop:4}}>
+                      From your sheet URL: …/spreadsheets/d/<strong style={{color:C.subtext}}>ID</strong>/edit
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:C.muted,marginBottom:4,letterSpacing:.5}}>API KEY</div>
+                    <input value={draftApiKey} onChange={e=>setDraftApiKey(e.target.value)}
+                      type="password" placeholder="AIza…"
+                      {...inp()}/>
+                    <div style={{fontSize:10,color:C.muted,marginTop:4}}>
+                      Google Cloud Console → APIs &amp; Services → Credentials
+                    </div>
+                  </div>
+                </div>
+                <div style={{maxWidth:300}}>
+                  <div style={{fontSize:10,color:C.muted,marginBottom:4,letterSpacing:.5}}>RANGE (optional)</div>
+                  <input value={draftApiRange} onChange={e=>setDraftApiRange(e.target.value)}
+                    placeholder={DEFAULT_API_RANGE}
+                    {...inp()}/>
+                  <div style={{fontSize:10,color:C.muted,marginTop:4}}>
+                    Leave blank to use <code style={{color:C.subtext}}>{DEFAULT_API_RANGE}</code>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div style={{display:"flex",gap:8,marginTop:14,alignItems:"center"}}>
+              <button onClick={saveSettings} disabled={!canSave}
+                style={{background:canSave?C.accent:"#1e3048",color:canSave?"#fff":C.muted,
+                  border:"none",borderRadius:8,padding:"8px 20px",
+                  cursor:canSave?"pointer":"default",fontFamily:FONT,fontSize:11,fontWeight:700}}>
+                Save &amp; reload
+              </button>
+              <button onClick={resetSettings}
+                style={{background:"transparent",color:C.muted,border:`1px solid ${C.border}`,
+                  borderRadius:8,padding:"8px 14px",cursor:"pointer",fontFamily:FONT,fontSize:11}}>
+                Reset to default
+              </button>
+            </div>
+
+            {/* Active source badge */}
+            <div style={{marginTop:10,fontSize:10,color:C.muted}}>
+              Active: {srcMode === "api"
+                ? <span style={{color:C.roman}}>⚡ Google Sheets API · sheet <code style={{color:C.subtext}}>{apiSheetId || "—"}</code></span>
+                : sheetUrl !== DEFAULT_SHEET_CSV_URL
+                  ? <span style={{color:"#f97316"}}>📄 Custom CSV · <span style={{wordBreak:"break-all"}}>{sheetUrl}</span></span>
+                  : <span>📄 Default published CSV</span>
+              }
+            </div>
+          </div>
+        );
+      })()}
 
       {lastUpdate && (
         <div style={{fontSize:11,color:C.muted,marginTop:4}}>

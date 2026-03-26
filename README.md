@@ -1,9 +1,9 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Telemedicine Dashboard</title>
+<title>Telemedicine Activity Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
@@ -340,19 +340,46 @@ body{
 <div id="panel-revenue" class="panel">
   <div class="ph2" style="margin-bottom:4px;" id="rev-title">Revenue by Provider</div>
   <div class="psub">Estimated daily revenue based on per-visit rates · RH $12/visit · TD $24.33/visit · MDL $25.46/visit</div>
+
+  <!-- Total revenue summary card -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 28px;margin-bottom:20px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rh),var(--td-c),var(--mdl));"></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:24px;align-items:center;">
+      <div>
+        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;" id="rev-total-label">Total Revenue — All Time</div>
+        <div style="font-size:3rem;font-weight:800;color:var(--revenue);line-height:1;" id="rev-grand-total">—</div>
+        <div style="font-size:.72rem;color:var(--text3);margin-top:6px;" id="rev-total-sub">across all providers</div>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:24px;">
+        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">Roman Health</div>
+        <div style="font-size:1.6rem;font-weight:700;color:var(--rh);line-height:1;" id="rev-total-rh">—</div>
+        <div style="font-size:.65rem;color:var(--text3);margin-top:4px;" id="rev-pct-rh">—% of total</div>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:24px;">
+        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">Teladoc</div>
+        <div style="font-size:1.6rem;font-weight:700;color:var(--td-c);line-height:1;" id="rev-total-td">—</div>
+        <div style="font-size:.65rem;color:var(--text3);margin-top:4px;" id="rev-pct-td">—% of total</div>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:24px;">
+        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">MDLive</div>
+        <div style="font-size:1.6rem;font-weight:700;color:var(--mdl);line-height:1;" id="rev-total-mdl">—</div>
+        <div style="font-size:.65rem;color:var(--text3);margin-top:4px;" id="rev-pct-mdl">—% of total</div>
+      </div>
+    </div>
+  </div>
+
   <div class="chart-sec">
     <h3>Daily Revenue ($)</h3>
     <div class="chart-wrap" style="height:300px;"><canvas id="revTabChart"></canvas></div>
     <div class="clegend">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>
-      <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
-      <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--revenue)"></div>Total Daily Revenue (RH + TD + MDL)</div>
     </div>
   </div>
-  <div class="mtd-row" style="margin-top:20px;">
-    <div class="mtd-card"><div class="mclabel">RH Revenue MTD</div><div class="mcval rh-c" id="rev-rh-mtd">—</div></div>
-    <div class="mtd-card"><div class="mclabel">TD Revenue MTD</div><div class="mcval td-c2" id="rev-td-mtd">—</div></div>
-    <div class="mtd-card"><div class="mclabel">MDL Revenue MTD</div><div class="mcval mdl-c" id="rev-mdl-mtd">—</div></div>
+  <!-- Month-to-month historical chart -->
+  <div class="chart-sec" style="margin-top:28px;">
+    <h3 id="rev-hist-title" style="margin-bottom:12px;">Monthly Revenue — All Time</h3>
+    <div class="chart-wrap" style="height:300px;"><canvas id="revHistChart"></canvas></div>
+    <div class="clegend" style="margin-top:10px;" id="rev-hist-legend"></div>
   </div>
 </div>
 
@@ -676,7 +703,7 @@ body{
   </div>
   <div class="psub" id="psub">Loading from Google Sheet…</div>
 
-  <div class="mtd-row">
+  <div class="mtd-row" style="grid-template-columns:repeat(5,1fr);">
     <div class="mtd-card">
       <div class="mclabel">MTD Encounters</div>
       <div class="mcval rh-c" id="mtd-enc">—</div>
@@ -686,8 +713,16 @@ body{
       <div class="mcval rev-c" id="mtd-rev">—</div>
     </div>
     <div class="mtd-card">
-      <div class="mclabel">Avg Daily (Roman Health)</div>
+      <div class="mclabel">Avg Daily · Roman Health</div>
       <div class="mcval rh-c" id="avg-rh">—</div>
+    </div>
+    <div class="mtd-card">
+      <div class="mclabel">Avg Daily · MDLive</div>
+      <div class="mcval mdl-c" id="avg-mdl">—</div>
+    </div>
+    <div class="mtd-card">
+      <div class="mclabel">Avg Daily · Teladoc</div>
+      <div class="mcval td-c2" id="avg-td">—</div>
     </div>
   </div>
 
@@ -1012,11 +1047,25 @@ function buildTabCharts(d) {
       scales:{x:{stacked,grid:{color:GRID},ticks:{maxRotation:45}},y:{stacked,grid:{color:GRID},beginAtZero:true}}}
   });
 
-  revTabChart = mkLine('revTabChart',[
-    {label:'Roman Health',data:d.rhRev||[], borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.08)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#2dd4a0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
-    {label:'Teladoc',     data:d.tdRev||[], borderColor:'#7b9ef0',backgroundColor:'rgba(123,158,240,.08)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#7b9ef0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
-    {label:'MDLive',      data:d.mdlRev||[],borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.08)', fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#f5a623',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
-  ]);
+  revTabChart = new Chart(document.getElementById('revTabChart').getContext('2d'), {
+    type:'line',
+    data:{ labels:d.labels, datasets:[{
+      label:'Total Revenue',
+      data: (d.rhRev||[]).map((v,i)=>(v||0)+((d.tdRev||[])[i]||0)+((d.mdlRev||[])[i]||0)),
+      borderColor:'#f87171',
+      backgroundColor:'rgba(248,113,113,.08)',
+      fill:true, tension:.4, pointRadius:0, borderWidth:2.5,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}, tooltip:{...tooltipDefaults(),callbacks:{label:i=>' $'+i.raw.toLocaleString()}}},
+      scales:{
+        x:{grid:{color:GRID},ticks:{maxRotation:45}},
+        y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>'$'+(v>=1000?(v/1000).toFixed(1)+'k':v)}}
+      }
+    }
+  });
   volChart = mkBar('volChart',[
     {label:'Roman Health',data:d.rh, backgroundColor:'rgba(45,212,160,.82)',borderWidth:0,borderRadius:2,stack:'s'},
     {label:'Teladoc',     data:d.td, backgroundColor:'rgba(123,158,240,.82)',borderWidth:0,borderRadius:2,stack:'s'},
@@ -1098,7 +1147,9 @@ function updateStats(daily) {
   // MTD cards (always current month)
   document.getElementById('mtd-enc').textContent=tEnc.toLocaleString();
   document.getElementById('mtd-rev').textContent='$'+tRev.toLocaleString();
-  document.getElementById('avg-rh').textContent=n?(tRH/n).toFixed(0):'—';
+  document.getElementById('avg-rh').textContent=n?(tRH/n).toFixed(1):'—';
+  const avgMdlEl=document.getElementById('avg-mdl'); if(avgMdlEl) avgMdlEl.textContent=n?(tMDL/n).toFixed(1):'—';
+  const avgTdEl=document.getElementById('avg-td');   if(avgTdEl)  avgTdEl.textContent=n?(tTD/n).toFixed(1):'—';
   document.getElementById('days-rec').textContent=n+' days recorded';
 
   // ── Use FILTERED data for all three stat cards ──
@@ -1176,6 +1227,138 @@ function updateBreakdownStats(tRH,tTD,tTD1,tTD2,tMDL,tMDL1,tMDL2,tot) {
   el('bd-mdl2-val',tMDL2.toLocaleString());
 }
 
+// ── Revenue historical chart ──
+let revHistChart = null;
+
+function buildRevHistChart() {
+  if (revHistChart) { revHistChart.destroy(); revHistChart = null; }
+  const gc = document.getElementById('revHistChart');
+  if (!gc) return;
+
+  const moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Get filtered sheets sorted chronologically
+  const filteredSheets = Object.entries(ALL_DATA)
+    .filter(([name, d]) => {
+      const yearOk  = ACTIVE_YEAR==='all'  || d.year===+ACTIVE_YEAR  || yearFromTabName(name)===+ACTIVE_YEAR;
+      const monthOk = ACTIVE_MONTH==='all' || d.month===+ACTIVE_MONTH;
+      return yearOk && monthOk;
+    })
+    .sort(([,a],[,b]) => a.year!==b.year ? a.year-b.year : a.month-b.month);
+
+  if (!filteredSheets.length) return;
+
+  // Build per-month revenue totals
+  const labels  = filteredSheets.map(([,d]) => moNames[d.month-1]+' '+String(d.year).slice(2));
+  const rhRevs  = [], tdRevs  = [], mdlRevs = [];
+
+  filteredSheets.forEach(([,d]) => {
+    const rhR   = Math.round(d.rh.reduce((a,b)=>a+b,0) * RATES.rh);
+    const td1t  = (d.td1||[]).reduce((a,b)=>a+b,0);
+    const td2t  = (d.td2||[]).reduce((a,b)=>a+b,0);
+    const mdl1t = (d.mdl1||[]).reduce((a,b)=>a+b,0);
+    const mdl2t = (d.mdl2||[]).reduce((a,b)=>a+b,0);
+    rhRevs.push(rhR);
+    tdRevs.push(Math.round(td1t*RATES.td1 + td2t*RATES.td2));
+    mdlRevs.push(Math.round(mdl1t*RATES.mdl1 + mdl2t*RATES.mdl2));
+  });
+
+  // Update title
+  const title = document.getElementById('rev-hist-title');
+  const yr  = ACTIVE_YEAR==='all'  ? 'All Time' : ACTIVE_YEAR;
+  const mo  = ACTIVE_MONTH==='all' ? '' : ' · '+moNames[+ACTIVE_MONTH-1];
+  if (title) title.textContent = 'Monthly Revenue — '+yr+mo+' ('+filteredSheets.length+' months)';
+
+  // Legend
+  const legend = document.getElementById('rev-hist-legend');
+  if (legend) legend.innerHTML = [
+    '<div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>',
+    '<div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>',
+    '<div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>',
+  ].join('');
+
+  revHistChart = new Chart(gc.getContext('2d'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Roman Health', data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'Teladoc',      data:tdRevs,  backgroundColor:'rgba(123,158,240,.82)',borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'MDLive',       data:mdlRevs, backgroundColor:'rgba(245,166,35,.82)', borderWidth:0, borderRadius:3, stack:'s'},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{...tooltipDefaults(), callbacks:{
+          label: i => ' '+i.dataset.label+': $'+i.raw.toLocaleString(),
+          footer: items => 'Total: $'+items.reduce((a,i)=>a+i.raw,0).toLocaleString()
+        }}
+      },
+      scales:{
+        x:{ stacked:true, grid:{color:GRID}, ticks:{maxRotation:45} },
+        y:{ stacked:true, grid:{color:GRID}, beginAtZero:true,
+            ticks:{callback:v=>'$'+(v>=1000?(v/1000).toFixed(0)+'k':v)} }
+      }
+    }
+  });
+}
+
+function updateRevSummary() {
+  const filtered = getFilteredData();
+  if (!filtered) return;
+
+  // Count months in selection for label
+  const filteredSheets = Object.entries(ALL_DATA).filter(([name, sd]) => {
+    const yearOk  = ACTIVE_YEAR==='all'  || sd.year===+ACTIVE_YEAR  || yearFromTabName(name)===+ACTIVE_YEAR;
+    const monthOk = ACTIVE_MONTH==='all' || sd.month===+ACTIVE_MONTH;
+    return yearOk && monthOk;
+  });
+  const numMonths = filteredSheets.length;
+
+  // Compute revenue per provider using correct sub-type rates
+  let totalRHRev=0, totalTDRev=0, totalMDLRev=0;
+  filteredSheets.forEach(([,d]) => {
+    totalRHRev  += d.rh.reduce((a,b)=>a+b,0) * RATES.rh;
+    const td1t   = (d.td1||[]).reduce((a,b)=>a+b,0);
+    const td2t   = (d.td2||[]).reduce((a,b)=>a+b,0);
+    const mdl1t  = (d.mdl1||[]).reduce((a,b)=>a+b,0);
+    const mdl2t  = (d.mdl2||[]).reduce((a,b)=>a+b,0);
+    totalTDRev  += td1t*RATES.td1  + td2t*RATES.td2;
+    totalMDLRev += mdl1t*RATES.mdl1 + mdl2t*RATES.mdl2;
+  });
+  const grandTotal = totalRHRev + totalTDRev + totalMDLRev;
+  const tot = grandTotal || 1;
+  const fmt = v => '$'+Math.round(v).toLocaleString();
+  const pct = v => Math.round(v/tot*100)+'%';
+
+  // Update label based on filter
+  const moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let label = 'Total Revenue — ';
+  if (ACTIVE_YEAR==='all' && ACTIVE_MONTH==='all') {
+    label += 'All Time ('+numMonths+' months)';
+  } else if (ACTIVE_MONTH!=='all' && ACTIVE_YEAR==='all') {
+    label += moNames[+ACTIVE_MONTH-1]+' across all years ('+numMonths+' months)';
+  } else if (ACTIVE_MONTH==='all' && ACTIVE_YEAR!=='all') {
+    label += 'All of '+ACTIVE_YEAR+' ('+numMonths+' months)';
+  } else {
+    label += moNames[+ACTIVE_MONTH-1]+' '+ACTIVE_YEAR;
+  }
+
+  const el = id => document.getElementById(id);
+  const set = (id,val) => { const e=el(id); if(e) e.textContent=val; };
+
+  set('rev-total-label',  label);
+  set('rev-grand-total',  fmt(grandTotal));
+  set('rev-total-sub',    numMonths+' month'+(numMonths!==1?'s':'')+' · '+
+    Math.round(grandTotal/Math.max(numMonths,1)).toLocaleString()+'/mo avg');
+  set('rev-total-rh',     fmt(totalRHRev));
+  set('rev-pct-rh',       pct(totalRHRev)+' of total');
+  set('rev-total-td',     fmt(totalTDRev));
+  set('rev-pct-td',       pct(totalTDRev)+' of total');
+  set('rev-total-mdl',    fmt(totalMDLRev));
+  set('rev-pct-mdl',      pct(totalMDLRev)+' of total');
+}
+
 function updateTabStats(d) {
   const tRH=d.rh.reduce((a,b)=>a+b,0), tTD=d.td.reduce((a,b)=>a+b,0), tMDL=d.mdl.reduce((a,b)=>a+b,0), tot=(tRH+tTD+tMDL)||1;
   const tRHR=(d.rhRev||[]).reduce((a,b)=>a+b,0), tTDR=(d.tdRev||[]).reduce((a,b)=>a+b,0), tMLR=(d.mdlRev||[]).reduce((a,b)=>a+b,0);
@@ -1242,19 +1425,25 @@ function applyFilters() {
   const bdSub = document.getElementById('breakdown-sub');
   if (bdSub) bdSub.textContent = 'Encounters by provider and visit type — ' + filterLabel;
 
-  // Goals tab update
-  const cmpPanel = document.getElementById('panel-compare');
-  if (cmpPanel && cmpPanel.classList.contains('active')) {
-    updateGoalsTab(getFilteredData());
-  }
+  // Revenue summary card — always update when filters change
+  updateRevSummary();
+  if (revHistChart || document.getElementById('panel-revenue').classList.contains('active')) buildRevHistChart();
+
+  // Monthly targets — always update when filters change
+  updateGoalsTab(getFilteredData());
 
   // Other tabs use full filtered data
   const d = getFilteredData();
   if (!d) return;
-  if (window._tabChartsBuilt) {
-    revTabChart.data.labels=volChart.data.labels=d.labels;
-    revTabChart.data.datasets[0].data=d.rhRev||[]; revTabChart.data.datasets[1].data=d.tdRev||[]; revTabChart.data.datasets[2].data=d.mdlRev||[];
+  // Always rebuild revTabChart with filtered data (not gated by _tabChartsBuilt)
+  if (revTabChart) {
+    revTabChart.data.labels=d.labels;
+    revTabChart.data.datasets[0].data=(d.rhRev||[]).map((v,i)=>(v||0)+((d.tdRev||[])[i]||0)+((d.mdlRev||[])[i]||0));
     revTabChart.update('active');
+  }
+
+  if (window._tabChartsBuilt) {
+    volChart.data.labels=d.labels;
     volChart.data.datasets[0].data=d.rh; volChart.data.datasets[1].data=d.td; volChart.data.datasets[2].data=d.mdl;
     volChart.update('active');
     const tRH=d.rh.reduce((a,b)=>a+b,0),tTD=d.td.reduce((a,b)=>a+b,0),tMDL=d.mdl.reduce((a,b)=>a+b,0),tot=(tRH+tTD+tMDL)||1;
@@ -1299,7 +1488,7 @@ const EMPTY = {
 };
 buildCharts(EMPTY);
 // Show dashes in all stat cards until live data arrives
-['mtd-enc','mtd-rev','avg-rh','s-enc','s-rev',
+['mtd-enc','mtd-rev','avg-rh','avg-mdl','avg-td','s-enc','s-rev',
  's-rh-mo','s-mdl-mo','s-td-mo','s-rh-day','s-mdl-day','s-td-day',
  's-rh-rev-day','s-mdl-rev-day','s-td-rev-day']
   .forEach(id => {
@@ -1400,11 +1589,13 @@ async function loadSheet(background=false) {
     saveCache(t);  // Cache raw response for next load
     ALL_DATA = parsed;
     window._lastData = getCurrentMonthData()||FB_MAR26;
+    updateRevSummary();
+    buildRevHistChart();
     const todayPanel = document.getElementById('panel-today');
     if (todayPanel && todayPanel.classList.contains('active')) updateTodayTab();
     // Refresh goals tab if open
     const goalsPanel = document.getElementById('panel-compare');
-    if (goalsPanel && goalsPanel.classList.contains('active')) updateGoalsTab(getFilteredData());
+    updateGoalsTab(getFilteredData()); // always refresh monthly targets
 
     // Daily badge shows current month day count
     const curMonth = getCurrentMonthData();
@@ -1451,10 +1642,21 @@ function switchTab(id,el){
       buildTabCharts(d);
       window._tabChartsBuilt = true;
     } else {
-      if(id==='revenue')   revTabChart&&revTabChart.resize();
+      if(id==='revenue'){
+        // Rebuild revenue line with current filtered data
+        const fd = getFilteredData();
+        if (fd && revTabChart) {
+          revTabChart.data.labels = fd.labels;
+          revTabChart.data.datasets[0].data = (fd.rhRev||[]).map((v,i)=>(v||0)+((fd.tdRev||[])[i]||0)+((fd.mdlRev||[])[i]||0));
+          revTabChart.update('active');
+        }
+        revTabChart&&revTabChart.resize();
+        updateRevSummary();
+        buildRevHistChart();
+      }
       if(id==='volume')    volChart&&volChart.resize();
       if(id==='breakdown') pieChart&&pieChart.resize();
-      if(id==='compare')   updateGoalsTab(getFilteredData());
+      if(id==='compare'){   updateGoalsTab(getFilteredData()); }
     }
   },80);
 }

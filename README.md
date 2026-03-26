@@ -777,7 +777,7 @@ function parseDateCol(h) {
 function monthYearFromTabName(name) {
   const moMap = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
   // "Jan 25", "Feb 2024", "Mar 26"
-  const m = name.trim().match(/^([A-Za-z]{3})\s*(\d{2,4})$/i);
+  const m = name.trim().match(/^([A-Za-z]{3})[\s-]*(\d{2,4})$/i);
   if (m) {
     const mo = moMap[m[1].toLowerCase()];
     if (mo) {
@@ -837,19 +837,27 @@ function parseSheetCSV(text, tabName) {
     const name = (row[0]||'').trim().toUpperCase().replace(/\s+/g,'');
     if (!name) continue;
     dateCols.forEach((col,j) => {
-      const v = parseFloat((row[col.i]||'').replace(/[$, ]/g,''))||0;
-      if (name==='RO') { rh[j] += v; }
-      else if (name==='TOT'||name==='TOTAL') { rev[j] += v; }
+      const raw = (row[col.i]||'').toString().replace(/#[A-Z!]+/g,'').replace(/[$, ]/g,'');
+      const v = parseFloat(raw)||0;
+      if (name==='RO'||name==='RO+') { rh[j] += v; }
+      else if (name==='TOT'||name==='TOTAL'||name==='TOTAL,') { rev[j] += v; }
     });
     // Track TD and MDL rows in order of appearance
-    if (name.startsWith('TD')) {
+    // TD variants: TD, TD1, TD2
+    // MDL variants: MD, MDL, MDL1, MDL2, MLV (MDLive video)
+    // RO variants: RO, RO+
+    const isTD  = name.startsWith('TD');
+    const isMDL = name==='MD'||name==='MDL'||name==='ML'||name.startsWith('MLV')||name.startsWith('MDL');
+    const isRO  = name==='RO'||name==='RO+';
+
+    if (isTD) {
       tdCount++;
       dateCols.forEach((col,j) => {
         const v = parseFloat((row[col.i]||'').replace(/[$, ]/g,''))||0;
         if (tdCount===1) td1[j]+=v; else td2[j]+=v;
       });
     }
-    if (name==='MDL'||name==='MD') {
+    if (isMDL) {
       mdlCount++;
       dateCols.forEach((col,j) => {
         const v = parseFloat((row[col.i]||'').replace(/[$, ]/g,''))||0;
@@ -889,9 +897,9 @@ function parseSheetCSV(text, tabName) {
 // "Jan 24" → 2024, "Mar 26" → 2026, "Jan 2024" → 2024
 function yearFromTabName(name) {
   let m;
-  m = name.match(/(\d{4})/);
+  m = name.trim().match(/(\d{4})/);
   if (m) return +m[1];
-  m = name.match(/(\d{2})$/);
+  m = name.trim().match(/(\d{2})\s*$/);
   if (m) { const y=+m[1]; return y<50?2000+y:1900+y; }
   return null;
 }

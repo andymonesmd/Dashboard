@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Telemedicine Activity Dashboard</title>
+<title>Telemedicine Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
@@ -1308,8 +1308,6 @@ buildCharts(EMPTY);
   });
 document.getElementById('days-rec').textContent='Loading…';
 document.getElementById('live-badge').style.display='flex';
-// Today is default tab — update it on first load
-setTimeout(updateTodayTab, 100);
 
 // ── Fetch all sheets from Apps Script ──
 const CACHE_KEY = 'tally_dashboard_cache';
@@ -1580,6 +1578,56 @@ function updateCompareTab() {
   }
 }
 
+// ── Today's Performance ──
+function updateTodayTab() {
+  try {
+    const curData = getCurrentMonthData();
+    if (!curData || !curData.labels.length) return;
+
+    const lastIdx = curData.labels.length - 1;
+    const todayLabel = curData.labels[lastIdx];
+    const rhVal  = curData.rh[lastIdx]  || 0;
+    const tdVal  = curData.td[lastIdx]  || 0;
+    const mdlVal = curData.mdl[lastIdx] || 0;
+    const total  = rhVal + tdVal + mdlVal;
+
+    const dateEl = document.getElementById('today-date');
+    if (dateEl) {
+      const now = new Date();
+      dateEl.textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+todayLabel;
+    }
+    const sub = document.getElementById('today-sub');
+    if (sub) sub.textContent = 'Last data point from your Google Sheet · auto-refreshes every 5 minutes';
+
+    function setHero(id, actual, target) {
+      const pct  = Math.round(actual / target * 100);
+      const hit  = actual >= target;
+      const near = pct >= 80;
+      const barColor  = hit ? '#22c55e' : near ? '#f5a623' : '#f87171';
+      const badgeText = hit ? '✓ On target' : near ? 'Almost there' : 'Below target';
+      const badgeBg   = hit ? 'rgba(34,197,94,.15)' : near ? 'rgba(245,166,35,.15)' : 'rgba(248,113,113,.15)';
+      const badgeCol  = hit ? '#22c55e' : near ? '#f5a623' : '#f87171';
+      const needed    = hit ? (actual-target)+' above target 🎉' : (target-actual)+' more to hit target';
+      const v = document.getElementById('today-'+id+'-val');     if(v) v.textContent=actual;
+      const bar=document.getElementById('today-'+id+'-bar');     if(bar){bar.style.width=Math.min(pct,100)+'%';bar.style.background=barColor;}
+      const pctEl=document.getElementById('today-'+id+'-pct');   if(pctEl){pctEl.textContent=pct+'%';pctEl.style.color=barColor;}
+      const badge=document.getElementById('today-'+id+'-badge'); if(badge){badge.textContent=badgeText;badge.style.background=badgeBg;badge.style.color=badgeCol;}
+      const need=document.getElementById('today-'+id+'-needed'); if(need) need.textContent=needed;
+    }
+
+    setHero('rh',  rhVal,  84);
+    setHero('td',  tdVal,  15);
+    setHero('mdl', mdlVal, 5);
+
+    const totalTarget = 104;
+    const totalPct = Math.round(total / totalTarget * 100);
+    const totalColor = totalPct>=100?'#22c55e':totalPct>=80?'#f5a623':'#f87171';
+    const totEl=document.getElementById('today-total');        if(totEl) totEl.textContent=total;
+    const oEl=document.getElementById('today-overall-pct');    if(oEl){oEl.textContent=totalPct+'%';oEl.style.color=totalColor;}
+    const totBar=document.getElementById('today-total-bar');   if(totBar) totBar.style.width=Math.min(totalPct,100)+'%';
+  } catch(e) { console.warn('updateTodayTab error:', e); }
+}
+
 // ── Monthly Targets ──
 const GOALS = { rh: 84, td: 15, mdl: 5 };
 const MONTHLY_GOALS = { rh: 2520, td: 450, mdl: 150, total: 3120 };
@@ -1592,6 +1640,7 @@ const MONTHLY_REV_GOALS = {
 let mgoalsChart = null;
 
 function updateGoalsTab(d) {
+  try {
   // Fallback chain to always find data
   if (!d || !d.labels || !d.labels.length) d = getFilteredData();
   if (!d || !d.labels || !d.labels.length) d = getCurrentMonthData();
@@ -1728,6 +1777,7 @@ function updateGoalsTab(d) {
       }
     }
   });
+  } catch(e) { console.warn('updateGoalsTab error:', e); }
 }
 
 // ── Year filter ──

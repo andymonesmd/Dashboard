@@ -5,7 +5,8 @@ import {
 } from "recharts";
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc3am4UpZjqNJx9i5asqyEn-AI51cqKSPKvjV89ujSi_4FnDDgxw5gbc6dk2hnX4HK3o52aqm6DUDW/pub?output=csv";
+const DEFAULT_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc3am4UpZjqNJx9i5asqyEn-AI51cqKSPKvjV89ujSi_4FnDDgxw5gbc6dk2hnX4HK3o52aqm6DUDW/pub?output=csv";
+const LS_URL_KEY = "dashboard_sheet_url";
 // Try direct first, fall back to CORS proxies
 const PROXIES = [
   url => url,                                                      // direct
@@ -14,11 +15,11 @@ const PROXIES = [
 ];
 const POLL_MS = 30_000;
 
-async function fetchCSV() {
+async function fetchCSV(sheetUrl) {
   let lastErr;
   for (const proxy of PROXIES) {
     try {
-      const res = await fetch(proxy(SHEET_CSV_URL), { cache: "no-store" });
+      const res = await fetch(proxy(sheetUrl), { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       if (text.includes("<!DOCTYPE")) throw new Error("Got HTML, not CSV");
@@ -160,20 +161,26 @@ const TabBtn = ({label,active,onClick}) => (
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const [yearFilter, setYearFilter] = useState("All");
-  const [activeTab,  setActiveTab]  = useState("Revenue");
-  const [liveData,   setLiveData]   = useState(null);
-  const [status,     setStatus]     = useState("loading");
-  const [errMsg,     setErrMsg]     = useState("");
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [countdown,  setCountdown]  = useState(POLL_MS/1000);
+  const [yearFilter,   setYearFilter]   = useState("All");
+  const [activeTab,    setActiveTab]    = useState("Revenue");
+  const [liveData,     setLiveData]     = useState(null);
+  const [status,       setStatus]       = useState("loading");
+  const [errMsg,       setErrMsg]       = useState("");
+  const [lastUpdate,   setLastUpdate]   = useState(null);
+  const [countdown,    setCountdown]    = useState(POLL_MS/1000);
+  const [sheetUrl,     setSheetUrl]     = useState(
+    () => localStorage.getItem(LS_URL_KEY) || DEFAULT_SHEET_CSV_URL
+  );
+  const [showSettings, setShowSettings] = useState(false);
+  const [draftUrl,     setDraftUrl]     = useState(sheetUrl);
   const pollRef = useRef(null);
   const cdRef   = useRef(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (url) => {
+    const activeUrl = url || sheetUrl;
     try {
       setStatus(s => s === "live" ? "live" : "loading");
-      const text   = await fetchCSV();
+      const text   = await fetchCSV(activeUrl);
       const parsed = parseCSV(text);
       if (!parsed) throw new Error("CSV parsed but structure not recognised");
       setLiveData(parsed);
@@ -185,13 +192,38 @@ export default function Dashboard() {
       setStatus("error");
       setErrMsg(e.message);
     }
-  }, []);
+  }, [sheetUrl]);
 
   useEffect(() => {
     load();
-    pollRef.current = setInterval(load, POLL_MS);
+    pollRef.current = setInterval(() => load(), POLL_MS);
     return () => clearInterval(pollRef.current);
   }, [load]);
+
+  const saveSettings = async () => {
+    const trimmed = draftUrl.trim();
+    if (!trimmed) return;
+    localStorage.setItem(LS_URL_KEY, trimmed);
+    setSheetUrl(trimmed);
+    setShowSettings(false);
+    setStatus("loading");
+    setLiveData(null);
+    clearInterval(pollRef.current);
+    await load(trimmed);
+    pollRef.current = setInterval(() => load(trimmed), POLL_MS);
+  };
+
+  const resetSettings = async () => {
+    localStorage.removeItem(LS_URL_KEY);
+    setDraftUrl(DEFAULT_SHEET_CSV_URL);
+    setSheetUrl(DEFAULT_SHEET_CSV_URL);
+    setShowSettings(false);
+    setStatus("loading");
+    setLiveData(null);
+    clearInterval(pollRef.current);
+    await load(DEFAULT_SHEET_CSV_URL);
+    pollRef.current = setInterval(() => load(DEFAULT_SHEET_CSV_URL), POLL_MS);
+  };
 
   useEffect(() => {
     cdRef.current = setInterval(() => setCountdown(c => c <= 1 ? POLL_MS/1000 : c-1), 1000);
@@ -305,7 +337,7 @@ export default function Dashboard() {
         <div style={{fontSize:28}}>⚠️</div>
         <div style={{color:"#ef4444"}}>Connection error</div>
         <div style={{fontSize:11,color:C.muted,maxWidth:400,textAlign:"center"}}>{errMsg}</div>
-        <button onClick={load} style={{marginTop:4,background:C.accent,color:"#fff",border:"none",
+        <button onClick={()=>load()} style={{marginTop:4,background:C.accent,color:"#fff",border:"none",
           borderRadius:20,padding:"7px 20px",cursor:"pointer",fontFamily:FONT,fontSize:12}}>
           Try again
         </button>
@@ -386,7 +418,13 @@ export default function Dashboard() {
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={load} style={{background:"transparent",border:`1px solid ${C.border}`,
+          <button onClick={()=>{setDraftUrl(sheetUrl);setShowSettings(s=>!s);}}
+            style={{background:"transparent",border:`1px solid ${C.border}`,
+            borderRadius:20,padding:"5px 14px",cursor:"pointer",fontFamily:FONT,
+            fontSize:11,color:C.subtext,outline:"none"}}>
+            ⚙ Data source
+          </button>
+          <button onClick={()=>load()} style={{background:"transparent",border:`1px solid ${C.border}`,
             borderRadius:20,padding:"5px 14px",cursor:"pointer",fontFamily:FONT,
             fontSize:11,color:C.subtext,outline:"none"}}>
             ↻ Refresh now
@@ -400,6 +438,49 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Settings panel */}
+      {showSettings && (
+        <div style={{background:"#0d1928",border:`1px solid ${C.border}`,borderRadius:12,
+          padding:"18px 20px",marginTop:12,marginBottom:4}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#e8f0fc",marginBottom:10}}>
+            📊 Spreadsheet Data Source
+          </div>
+          <div style={{fontSize:11,color:C.muted,marginBottom:10}}>
+            Paste the <strong style={{color:C.subtext}}>published-as-CSV</strong> URL from your Google Sheet
+            (File → Share → Publish to web → CSV).
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+            <input
+              value={draftUrl}
+              onChange={e=>setDraftUrl(e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv"
+              style={{flex:1,minWidth:260,background:"#162032",border:`1px solid ${C.border}`,
+                borderRadius:8,padding:"8px 12px",color:C.text,fontFamily:FONT,fontSize:11,outline:"none"}}
+            />
+            <button onClick={saveSettings}
+              style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,
+                padding:"8px 18px",cursor:"pointer",fontFamily:FONT,fontSize:11,fontWeight:700}}>
+              Save &amp; reload
+            </button>
+            <button onClick={resetSettings}
+              style={{background:"transparent",color:C.muted,border:`1px solid ${C.border}`,
+                borderRadius:8,padding:"8px 14px",cursor:"pointer",fontFamily:FONT,fontSize:11}}>
+              Reset to default
+            </button>
+            <button onClick={()=>setShowSettings(false)}
+              style={{background:"transparent",color:C.muted,border:"none",
+                padding:"8px 6px",cursor:"pointer",fontFamily:FONT,fontSize:13}}>
+              ✕
+            </button>
+          </div>
+          {sheetUrl !== DEFAULT_SHEET_CSV_URL && (
+            <div style={{marginTop:8,fontSize:10,color:C.roman}}>
+              ● Using custom source · <span style={{color:C.muted,wordBreak:"break-all"}}>{sheetUrl}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {lastUpdate && (
         <div style={{fontSize:11,color:C.muted,marginTop:4}}>
           Last updated: {lastUpdate.toLocaleTimeString()}
@@ -412,7 +493,7 @@ export default function Dashboard() {
           padding:"12px 18px",marginTop:14,fontSize:12,color:"#f87171",display:"flex",
           alignItems:"center",justifyContent:"space-between"}}>
           <span>⚠ Could not reach Google Sheet — showing historical data. <span style={{color:C.muted}}>{errMsg}</span></span>
-          <button onClick={load} style={{background:"transparent",border:"1px solid #f87171",
+          <button onClick={()=>load()} style={{background:"transparent",border:"1px solid #f87171",
             borderRadius:14,padding:"4px 12px",cursor:"pointer",fontFamily:FONT,
             fontSize:11,color:"#f87171",outline:"none",marginLeft:12}}>Retry</button>
         </div>

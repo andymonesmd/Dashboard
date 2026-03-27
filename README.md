@@ -179,15 +179,26 @@ body{
   <div class="topbar-left">
     <h1>Telemedicine Activity Dashboard</h1>
     <div class="sub">
-      July 2024 – Present &nbsp;·&nbsp;
-      <span class="ldot" style="background:var(--rh)"></span> Roman Health &nbsp;·&nbsp;
+      <span id="date-range">Jan 2024 – Present</span> &nbsp;·&nbsp;
+      <span class="ldot" style="background:var(--rh)"></span> Roman &nbsp;·&nbsp;
       <span class="ldot" style="background:var(--mdl)"></span> MDLive &nbsp;·&nbsp;
       <span class="ldot" style="background:var(--td-c)"></span> Teladoc
     </div>
   </div>
-  <div class="feed-badge">
-    <span class="feed-dot" id="feed-dot"></span>
-    <span id="feed-label">Connecting…</span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="feed-badge">
+      <span class="feed-dot" id="feed-dot"></span>
+      <span id="feed-label">Connecting…</span>
+    </div>
+    <button onclick="manualRefresh(this)" title="Refresh now" style="
+      background:var(--surface2);border:1px solid var(--border2);
+      border-radius:20px;padding:6px 12px;color:var(--text2);
+      font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;
+      transition:.15s;display:flex;align-items:center;gap:5px;
+    " onmouseover="this.style.borderColor='#60a5fa';this.style.color='#60a5fa'"
+       onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+      ↻ Refresh
+    </button>
   </div>
 </div>
 
@@ -221,7 +232,7 @@ body{
   <div class="filter-group">
     <span class="flabel">Filter by type:</span>
     <button class="pill active" onclick="setType(this,'all')">All</button>
-    <button class="pill" onclick="setType(this,'rh')">Roman Health</button>
+    <button class="pill" onclick="setType(this,'rh')">Roman</button>
     <button class="pill" onclick="setType(this,'mdl')">MDLive</button>
     <button class="pill" onclick="setType(this,'td')">Teladoc</button>
   </div>
@@ -239,25 +250,25 @@ body{
   <div class="statcard">
     <div class="sclabel" id="s-visits-label">Avg Visits / Month</div>
     <div class="scrow">
-      <div class="metric"><span class="mname">Roman Health</span><span class="mval rh-c" id="s-rh-mo">—</span></div>
-      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-mo">—</span></div>
+      <div class="metric"><span class="mname">Roman</span><span class="mval rh-c" id="s-rh-mo">—</span></div>
       <div class="metric"><span class="mname">Teladoc</span><span class="mval td-c2" id="s-td-mo">—</span></div>
+      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-mo">—</span></div>
     </div>
   </div>
   <div class="statcard">
     <div class="sclabel">Avg Visits / Day</div>
     <div class="scrow">
-      <div class="metric"><span class="mname">Roman Health</span><span class="mval rh-c" id="s-rh-day">—</span></div>
-      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-day">—</span></div>
+      <div class="metric"><span class="mname">Roman</span><span class="mval rh-c" id="s-rh-day">—</span></div>
       <div class="metric"><span class="mname">Teladoc</span><span class="mval td-c2" id="s-td-day">—</span></div>
+      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-day">—</span></div>
     </div>
   </div>
   <div class="statcard">
     <div class="sclabel" id="s-rev-label">Avg Revenue / Day</div>
     <div class="scrow">
-      <div class="metric"><span class="mname">Roman Health</span><span class="mval rh-c" id="s-rh-rev-day">—</span></div>
-      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-rev-day">—</span></div>
+      <div class="metric"><span class="mname">Roman</span><span class="mval rh-c" id="s-rh-rev-day">—</span></div>
       <div class="metric"><span class="mname">Teladoc</span><span class="mval td-c2" id="s-td-rev-day">—</span></div>
+      <div class="metric"><span class="mname">MDLive</span><span class="mval mdl-c" id="s-mdl-rev-day">—</span></div>
     </div>
   </div>
 </div>
@@ -351,7 +362,7 @@ body{
         <div style="font-size:.72rem;color:var(--text3);margin-top:6px;" id="rev-total-sub">across all providers</div>
       </div>
       <div style="border-left:1px solid var(--border);padding-left:24px;">
-        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">Roman Health</div>
+        <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">Roman</div>
         <div style="font-size:1.6rem;font-weight:700;color:var(--rh);line-height:1;" id="rev-total-rh">—</div>
         <div style="font-size:.65rem;color:var(--text3);margin-top:4px;" id="rev-pct-rh">—% of total</div>
       </div>
@@ -390,7 +401,7 @@ body{
     <h3>Daily Encounter Volume</h3>
     <div class="chart-wrap" style="height:300px;"><canvas id="volChart"></canvas></div>
     <div class="clegend">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
     </div>
@@ -422,9 +433,9 @@ body{
   <!-- Bottom: stat cards per provider with phone/video split -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
 
-    <!-- Roman Health -->
+    <!-- Roman -->
     <div class="mtd-card">
-      <div class="mclabel" style="color:var(--rh);">Roman Health</div>
+      <div class="mclabel" style="color:var(--rh);">Roman</div>
       <div style="font-size:1.8rem;font-weight:700;color:var(--rh);margin:6px 0 2px;" id="bd-rh-tot">—</div>
       <div style="font-size:.7rem;color:var(--text3);" id="bd-rh-pct">— of total</div>
       <div style="margin-top:10px;font-size:.68rem;color:var(--text2);">
@@ -467,6 +478,18 @@ body{
     </div>
 
   </div>
+
+  <!-- Day of Week Volume Chart -->
+  <div class="chart-sec" style="margin-top:28px;">
+    <h3>Encounters by Day of Week</h3>
+    <div class="psub" style="margin-bottom:12px;">Average daily encounters per weekday — based on current filter selection</div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="dowChart"></canvas></div>
+    <div class="clegend" style="margin-top:10px;">
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-compare" class="panel">
@@ -476,10 +499,10 @@ body{
   <!-- Hero cards — same style as Today tab -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:24px 0;">
 
-    <!-- Roman Health -->
+    <!-- Roman -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--rh);"></div>
-      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman Health</div>
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman</div>
       <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
         <div style="font-size:3rem;font-weight:800;color:var(--rh);line-height:1;" id="mgoal-rh-val">—</div>
         <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 2,520</div>
@@ -542,7 +565,7 @@ body{
         <div style="font-size:.7rem;color:var(--text3);margin-top:4px;">vs <span style="color:var(--text2);font-weight:600;" id="mgoal-rev-target">—</span> target</div>
       </div>
       <div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:3px;">Roman Health</div>
+        <div style="font-size:.68rem;color:var(--text3);margin-bottom:3px;">Roman</div>
         <div style="font-size:1.3rem;font-weight:700;color:var(--rh);" id="mgoal-rev-rh">—</div>
         <div style="font-size:.65rem;color:var(--text3);">of <span style="color:var(--text2);" id="mgoal-rev-rh-target">—</span></div>
       </div>
@@ -592,7 +615,7 @@ body{
     <h3>Monthly Totals vs Target — All Time</h3>
     <div class="chart-wrap" style="height:280px;"><canvas id="mgoalsChart"></canvas></div>
     <div class="clegend" style="margin-top:10px;">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
       <div class="cleg"><div class="cleg-dot" style="background:rgba(255,255,255,.3);border:1px dashed #fff;"></div>Combined Target (3,120)</div>
@@ -614,10 +637,10 @@ body{
   <!-- Big hero cards -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:24px 0;">
 
-    <!-- Roman Health -->
+    <!-- Roman -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--rh);"></div>
-      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman Health</div>
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman</div>
       <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
         <div style="font-size:3.5rem;font-weight:800;color:var(--rh);line-height:1;" id="today-rh-val">—</div>
         <div style="font-size:1rem;color:var(--text3);margin-bottom:8px;">/ 84</div>
@@ -713,16 +736,16 @@ body{
       <div class="mcval rev-c" id="mtd-rev">—</div>
     </div>
     <div class="mtd-card">
-      <div class="mclabel">Avg Daily · Roman Health</div>
+      <div class="mclabel">Avg Daily · Roman</div>
       <div class="mcval rh-c" id="avg-rh">—</div>
-    </div>
-    <div class="mtd-card">
-      <div class="mclabel">Avg Daily · MDLive</div>
-      <div class="mcval mdl-c" id="avg-mdl">—</div>
     </div>
     <div class="mtd-card">
       <div class="mclabel">Avg Daily · Teladoc</div>
       <div class="mcval td-c2" id="avg-td">—</div>
+    </div>
+    <div class="mtd-card">
+      <div class="mclabel">Avg Daily · MDLive</div>
+      <div class="mcval mdl-c" id="avg-mdl">—</div>
     </div>
   </div>
 
@@ -730,7 +753,7 @@ body{
     <h3>Daily Encounters</h3>
     <div class="chart-wrap"><canvas id="encChart"></canvas></div>
     <div class="clegend">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
     </div>
@@ -740,7 +763,7 @@ body{
     <h3>Daily Revenue (estimated by provider)</h3>
     <div class="chart-wrap"><canvas id="revChart"></canvas></div>
     <div class="clegend">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
       <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
     </div>
@@ -750,7 +773,7 @@ body{
 <!-- FOOTER -->
 <div class="footer-row">
   <span>Last refreshed: <span id="last-updated">—</span></span>
-  <span>Auto-refreshes every 5 minutes</span>
+  <span>Auto-refreshes every minute</span>
 </div>
 
 <script>
@@ -760,7 +783,7 @@ const SHEET_CSV_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc3am4
 // ── Revenue rates per visit ──
 // Per-visit reimbursement rates (verified against CSV totals)
 const RATES = {
-  rh:    12.00,  // Roman Health
+  rh:    12.00,  // Roman
   td1:   23.00,  // Teladoc phone (row 2)
   td2:   28.00,  // Teladoc video (row 4)
   mdl1:  25.00,  // MDLive phone  (row 3)
@@ -1009,7 +1032,7 @@ function buildCharts(d) {
   const ec = document.getElementById('encChart').getContext('2d');
   encChart = new Chart(ec,{
     type:'bar', data:{labels:d.labels, datasets:[
-      {label:'Roman Health',data:d.rh, backgroundColor:'rgba(45,212,160,.82)',borderWidth:0,borderRadius:2,stack:'s'},
+      {label:'Roman',data:d.rh, backgroundColor:'rgba(45,212,160,.82)',borderWidth:0,borderRadius:2,stack:'s'},
       {label:'Teladoc',     data:d.td, backgroundColor:'rgba(123,158,240,.82)',borderWidth:0,borderRadius:2,stack:'s'},
       {label:'MDLive',      data:d.mdl,backgroundColor:'rgba(245,166,35,.82)', borderWidth:0,borderRadius:2,stack:'s'},
     ]},
@@ -1022,7 +1045,7 @@ function buildCharts(d) {
   const rc = document.getElementById('revChart').getContext('2d');
   revChart = new Chart(rc,{
     type:'line', data:{labels:d.labels, datasets:[
-      {label:'Roman Health',data:d.rhRev||[], borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.06)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#2dd4a0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
+      {label:'Roman',data:d.rhRev||[], borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.06)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#2dd4a0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
       {label:'Teladoc',     data:d.tdRev||[], borderColor:'#7b9ef0',backgroundColor:'rgba(123,158,240,.06)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#7b9ef0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
       {label:'MDLive',      data:d.mdlRev||[],borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.06)', fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#f5a623',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
     ]},
@@ -1067,7 +1090,7 @@ function buildTabCharts(d) {
     }
   });
   volChart = mkBar('volChart',[
-    {label:'Roman Health',data:d.rh, backgroundColor:'rgba(45,212,160,.82)',borderWidth:0,borderRadius:2,stack:'s'},
+    {label:'Roman',data:d.rh, backgroundColor:'rgba(45,212,160,.82)',borderWidth:0,borderRadius:2,stack:'s'},
     {label:'Teladoc',     data:d.td, backgroundColor:'rgba(123,158,240,.82)',borderWidth:0,borderRadius:2,stack:'s'},
     {label:'MDLive',      data:d.mdl,backgroundColor:'rgba(245,166,35,.82)', borderWidth:0,borderRadius:2,stack:'s'},
   ]);
@@ -1112,7 +1135,7 @@ function buildTabCharts(d) {
   cmpChart = new Chart(document.getElementById('cmpChart').getContext('2d'), {
     type: 'line',
     data: { labels: d.labels, datasets: [
-      { label:'Roman Health', data:rhPct,  borderColor:'#2dd4a0', backgroundColor:'rgba(45,212,160,.08)',  fill:true, tension:.35, pointRadius:2, borderWidth:2 },
+      { label:'Roman', data:rhPct,  borderColor:'#2dd4a0', backgroundColor:'rgba(45,212,160,.08)',  fill:true, tension:.35, pointRadius:2, borderWidth:2 },
       { label:'Teladoc',      data:tdPct,  borderColor:'#7b9ef0', backgroundColor:'rgba(123,158,240,.08)', fill:true, tension:.35, pointRadius:2, borderWidth:2 },
       { label:'MDLive',       data:mdlPct, borderColor:'#f5a623', backgroundColor:'rgba(245,166,35,.08)',  fill:true, tension:.35, pointRadius:2, borderWidth:2 },
     ]},
@@ -1212,6 +1235,84 @@ function updateStats(daily) {
   if (visitsEl)  visitsEl.textContent  = numMonths===1 ? 'Visits This Month' : 'Avg Visits / Month';
 }
 
+// ── Day of Week chart ──
+let dowChart = null;
+
+function buildDowChart() {
+  if (dowChart) { dowChart.destroy(); dowChart = null; }
+  const gc = document.getElementById('dowChart');
+  if (!gc) return;
+
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const rhByDow  = new Array(7).fill(0);
+  const tdByDow  = new Array(7).fill(0);
+  const mdlByDow = new Array(7).fill(0);
+  const countByDow = new Array(7).fill(0);
+
+  // Get filtered sheets
+  const filteredSheets = Object.entries(ALL_DATA).filter(([name, d]) => {
+    const yearOk  = ACTIVE_YEAR==='all'  || d.year===+ACTIVE_YEAR  || yearFromTabName(name)===+ACTIVE_YEAR;
+    const monthOk = ACTIVE_MONTH==='all' || d.month===+ACTIVE_MONTH;
+    return yearOk && monthOk;
+  });
+
+  filteredSheets.forEach(([, d]) => {
+    d.labels.forEach((label, i) => {
+      // label format: "M/D" e.g. "3/26"
+      const parts = label.split('/');
+      if (parts.length < 2) return;
+      const mo  = parseInt(parts[0]);
+      const day = parseInt(parts[1]);
+      const yr  = d.year || 2026;
+      const date = new Date(yr, mo - 1, day);
+      const dow  = date.getDay(); // 0=Sun, 6=Sat
+      rhByDow[dow]  += d.rh[i]  || 0;
+      tdByDow[dow]  += d.td[i]  || 0;
+      mdlByDow[dow] += d.mdl[i] || 0;
+      countByDow[dow]++;
+    });
+  });
+
+  // Average per occurrence of that weekday
+  const rhAvg  = rhByDow.map((v,i)  => countByDow[i] ? +(v/countByDow[i]).toFixed(1) : 0);
+  const tdAvg  = tdByDow.map((v,i)  => countByDow[i] ? +(v/countByDow[i]).toFixed(1) : 0);
+  const mdlAvg = mdlByDow.map((v,i) => countByDow[i] ? +(v/countByDow[i]).toFixed(1) : 0);
+
+  dowChart = new Chart(gc.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: DAYS,
+      datasets: [
+        { label:'Roman',   data:rhAvg,  backgroundColor:'rgba(45,212,160,.85)', borderWidth:0, borderRadius:4, stack:'s' },
+        { label:'Teladoc', data:tdAvg,  backgroundColor:'rgba(123,158,240,.85)',borderWidth:0, borderRadius:4, stack:'s' },
+        { label:'MDLive',  data:mdlAvg, backgroundColor:'rgba(245,166,35,.85)', borderWidth:0, borderRadius:4, stack:'s' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          ...tooltipDefaults(),
+          callbacks:{
+            label: i => ' '+i.dataset.label+': '+i.raw,
+            footer: items => 'Total avg: '+items.reduce((a,i)=>a+(+i.raw),0).toFixed(1)
+          }
+        }
+      },
+      scales:{
+        x:{ stacked:true, grid:{color:GRID},
+          ticks:{ font:{size:13, weight:'600'} }
+        },
+        y:{ stacked:true, grid:{color:GRID}, beginAtZero:true,
+          title:{display:true, text:'Avg Daily Encounters', color:'#64748b', font:{size:10}}
+        }
+      }
+    }
+  });
+}
+
 function updateBreakdownStats(tRH,tTD,tTD1,tTD2,tMDL,tMDL1,tMDL2,tot) {
   const pct = v => Math.round(v/tot*100)+'% of total';
   const el = (id,val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
@@ -1272,7 +1373,7 @@ function buildRevHistChart() {
   // Legend
   const legend = document.getElementById('rev-hist-legend');
   if (legend) legend.innerHTML = [
-    '<div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman Health</div>',
+    '<div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>',
     '<div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>',
     '<div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>',
   ].join('');
@@ -1280,7 +1381,7 @@ function buildRevHistChart() {
   revHistChart = new Chart(gc.getContext('2d'), {
     type:'bar',
     data:{ labels, datasets:[
-      {label:'Roman Health', data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'Roman', data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:3, stack:'s'},
       {label:'Teladoc',      data:tdRevs,  backgroundColor:'rgba(123,158,240,.82)',borderWidth:0, borderRadius:3, stack:'s'},
       {label:'MDLive',       data:mdlRevs, backgroundColor:'rgba(245,166,35,.82)', borderWidth:0, borderRadius:3, stack:'s'},
     ]},
@@ -1424,6 +1525,8 @@ function applyFilters() {
   if (bdTitle) bdTitle.textContent = 'Visit Breakdown — ' + filterLabel;
   const bdSub = document.getElementById('breakdown-sub');
   if (bdSub) bdSub.textContent = 'Encounters by provider and visit type — ' + filterLabel;
+  // Rebuild day-of-week chart when filters change
+
 
   // Revenue summary card — always update when filters change
   updateRevSummary();
@@ -1442,19 +1545,43 @@ function applyFilters() {
     revTabChart.update('active');
   }
 
+  // Always update breakdown stats & charts regardless of tab state
+  const tRH=d.rh.reduce((a,b)=>a+b,0),tTD=d.td.reduce((a,b)=>a+b,0),tMDL=d.mdl.reduce((a,b)=>a+b,0),tot=(tRH+tTD+tMDL)||1;
+  const tTD1r=(d.td1||[]).reduce((a,b)=>a+b,0), tTD2r=(d.td2||[]).reduce((a,b)=>a+b,0);
+  const tMDL1r=(d.mdl1||[]).reduce((a,b)=>a+b,0), tMDL2r=(d.mdl2||[]).reduce((a,b)=>a+b,0);
+  updateBreakdownStats(tRH,tTD,tTD1r,tTD2r,tMDL,tMDL1r,tMDL2r,tot);
+  buildDowChart();
+
+  // Always rebuild the horizontal phone/video bar with filtered data
+  if (pieChart) { pieChart.destroy(); pieChart = null; }
+  const bdCtx = document.getElementById('breakdownChart');
+  if (bdCtx) {
+    pieChart = new Chart(bdCtx.getContext('2d'), {
+      type:'bar',
+      data:{ labels:['Encounters'], datasets:[
+        {label:'TD Phone', data:[tTD1r], backgroundColor:'rgba(123,158,240,.85)',borderColor:'#7b9ef0',borderWidth:1,borderRadius:3,stack:'s'},
+        {label:'TD Video', data:[tTD2r], backgroundColor:'rgba(79,109,217,.85)', borderColor:'#4f6dd9',borderWidth:1,borderRadius:3,stack:'s'},
+        {label:'MDL Phone',data:[tMDL1r],backgroundColor:'rgba(245,166,35,.85)', borderColor:'#f5a623',borderWidth:1,borderRadius:3,stack:'s'},
+        {label:'MDL Video',data:[tMDL2r],backgroundColor:'rgba(224,123,0,.85)',  borderColor:'#e07b00',borderWidth:1,borderRadius:3,stack:'s'},
+      ]},
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false}, tooltip:{...tooltipDefaults(), callbacks:{
+          label: i => ' '+i.dataset.label+': '+i.raw.toLocaleString()+' ('+Math.round(i.raw/tot*100)+'%)'
+        }}},
+        scales:{
+          x:{stacked:true, grid:{color:GRID}, ticks:{callback:v=>v.toLocaleString()}},
+          y:{stacked:true, grid:{color:'transparent'}, ticks:{display:false}},
+        }
+      }
+    });
+  }
+
   if (window._tabChartsBuilt) {
     volChart.data.labels=d.labels;
     volChart.data.datasets[0].data=d.rh; volChart.data.datasets[1].data=d.td; volChart.data.datasets[2].data=d.mdl;
     volChart.update('active');
-    const tRH=d.rh.reduce((a,b)=>a+b,0),tTD=d.td.reduce((a,b)=>a+b,0),tMDL=d.mdl.reduce((a,b)=>a+b,0),tot=(tRH+tTD+tMDL)||1;
-    const tTD1r=(d.td1||[]).reduce((a,b)=>a+b,0), tTD2r=(d.td2||[]).reduce((a,b)=>a+b,0);
-    const tMDL1r=(d.mdl1||[]).reduce((a,b)=>a+b,0), tMDL2r=(d.mdl2||[]).reduce((a,b)=>a+b,0);
-    pieChart.data.datasets[0].data=[tTD1r];
-    pieChart.data.datasets[1].data=[tTD2r];
-    pieChart.data.datasets[2].data=[tMDL1r];
-    pieChart.data.datasets[3].data=[tMDL2r];
-    pieChart.update('active');
-    updateBreakdownStats(tRH,tTD,tTD1r,tTD2r,tMDL,tMDL1r,tMDL2r,tot);
     const cmpTot2 = d.rh.map((_,i)=>(d.rh[i]||0)+(d.td[i]||0)+(d.mdl[i]||0)||1);
     cmpChart.data.labels=d.labels;
     cmpChart.data.datasets[0].data=d.rh.map((v,i)=>+((v/cmpTot2[i])*100).toFixed(1));
@@ -1591,6 +1718,7 @@ async function loadSheet(background=false) {
     window._lastData = getCurrentMonthData()||FB_MAR26;
     updateRevSummary();
     buildRevHistChart();
+    buildDowChart();
     const todayPanel = document.getElementById('panel-today');
     if (todayPanel && todayPanel.classList.contains('active')) updateTodayTab();
     // Refresh goals tab if open
@@ -1611,8 +1739,16 @@ async function loadSheet(background=false) {
     // Remove loading skeletons
     document.querySelectorAll('.loading-pulse').forEach(el => el.classList.remove('loading-pulse'));
     document.getElementById('feed-dot').classList.add('live');
-    document.getElementById('feed-label').textContent='Live · '+Object.keys(parsed).length+' sheets · last: '+new Date().toLocaleTimeString();
-    document.getElementById('psub').textContent='Pulled from '+Object.keys(parsed).length+' sheet tabs · refreshes every 5 min';
+    document.getElementById('feed-label').textContent='Live · last: '+new Date().toLocaleTimeString();
+    // Update subtitle with actual date range from data
+    const allSheetsSorted = Object.values(ALL_DATA).sort((a,b)=>a.year!==b.year?a.year-b.year:a.month-b.month);
+    if (allSheetsSorted.length) {
+      const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const first = allSheetsSorted[0];
+      const rangeEl = document.getElementById('date-range');
+      if (rangeEl) rangeEl.textContent = mo[first.month-1]+' '+first.year+' – Present';
+    }
+    document.getElementById('psub').textContent='Pulled from '+Object.keys(parsed).length+' sheet tabs · refreshes every minute';
     document.getElementById('last-updated').textContent=new Date().toLocaleTimeString();
     const notice=document.getElementById('setup-notice');
     if(notice) notice.style.display='none';
@@ -1626,7 +1762,7 @@ async function loadSheet(background=false) {
   }
 }
 loadSheet();
-setInterval(() => loadSheet(true), 5*60*1000);
+setInterval(() => loadSheet(true), 60*1000); // refresh every minute
 
 // ── Tab switching ──
 function switchTab(id,el){
@@ -1655,7 +1791,7 @@ function switchTab(id,el){
         buildRevHistChart();
       }
       if(id==='volume')    volChart&&volChart.resize();
-      if(id==='breakdown') pieChart&&pieChart.resize();
+      if(id==='breakdown'){ pieChart&&pieChart.resize(); buildDowChart(); }
       if(id==='compare'){   updateGoalsTab(getFilteredData()); }
     }
   },80);
@@ -1701,7 +1837,7 @@ function renderYoYView() {
     data: {
       labels: yearLabels,
       datasets: [
-        { label:'Roman Health', data:rhTotals,  backgroundColor:'rgba(45,212,160,.85)', borderColor:'#2dd4a0', borderWidth:1, borderRadius:4 },
+        { label:'Roman', data:rhTotals,  backgroundColor:'rgba(45,212,160,.85)', borderColor:'#2dd4a0', borderWidth:1, borderRadius:4 },
         { label:'Teladoc',      data:tdTotals,  backgroundColor:'rgba(123,158,240,.85)',borderColor:'#7b9ef0', borderWidth:1, borderRadius:4 },
         { label:'MDLive',       data:mdlTotals, backgroundColor:'rgba(245,166,35,.85)', borderColor:'#f5a623', borderWidth:1, borderRadius:4 },
       ]
@@ -1796,10 +1932,11 @@ function updateTodayTab() {
     const dateEl = document.getElementById('today-date');
     if (dateEl) {
       const now = new Date();
-      dateEl.textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+todayLabel;
+      const timeStr = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      dateEl.textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' · refreshed '+timeStr;
     }
     const sub = document.getElementById('today-sub');
-    if (sub) sub.textContent = 'Last data point from your Google Sheet · auto-refreshes every 5 minutes';
+    if (sub) sub.textContent = 'Last data point from your Google Sheet · auto-refreshes every minute';
 
     function setHero(id, actual, target) {
       const pct  = Math.round(actual / target * 100);
@@ -1954,7 +2091,7 @@ function updateGoalsTab(d) {
     data: {
       labels: mLabels,
       datasets: [
-        { type:'bar',  label:'Roman Health', data:mRH,     backgroundColor:'rgba(45,212,160,.82)',  borderWidth:0, borderRadius:3, stack:'s' },
+        { type:'bar',  label:'Roman', data:mRH,     backgroundColor:'rgba(45,212,160,.82)',  borderWidth:0, borderRadius:3, stack:'s' },
         { type:'bar',  label:'Teladoc',      data:mTD,     backgroundColor:'rgba(123,158,240,.82)', borderWidth:0, borderRadius:3, stack:'s' },
         { type:'bar',  label:'MDLive',       data:mMDL,    backgroundColor:'rgba(245,166,35,.82)',  borderWidth:0, borderRadius:3, stack:'s' },
         { type:'line', label:'Target',       data:mTarget, borderColor:'rgba(255,255,255,.4)', borderDash:[6,4],
@@ -1980,6 +2117,19 @@ function updateGoalsTab(d) {
     }
   });
   } catch(e) { console.warn('updateGoalsTab error:', e); }
+}
+
+// ── Manual refresh ──
+function manualRefresh(btn) {
+  const orig = btn.innerHTML;
+  btn.innerHTML = '↻ Refreshing…';
+  btn.style.color = '#60a5fa';
+  btn.disabled = true;
+  loadSheet(false).finally(() => {
+    btn.innerHTML = orig;
+    btn.style.color = 'var(--text2)';
+    btn.disabled = false;
+  });
 }
 
 // ── Year filter ──

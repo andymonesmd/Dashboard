@@ -229,12 +229,14 @@ body{
     <button class="pill" onclick="setMonth(this,12)">Dec</button>
   </div>
   <div class="fdivider"></div>
-  <div class="filter-group">
-    <span class="flabel">Filter by type:</span>
-    <button class="pill active" onclick="setType(this,'all')">All</button>
-    <button class="pill" onclick="setType(this,'rh')">Roman</button>
-    <button class="pill" onclick="setType(this,'mdl')">MDLive</button>
-    <button class="pill" onclick="setType(this,'td')">Teladoc</button>
+  <div class="filter-group" id="rev-window-group">
+    <span class="flabel">Revenue window:</span>
+    <button class="pill active" onclick="setRevWindow(this,0)">All Time</button>
+    <button class="pill" onclick="setRevWindow(this,365)">Last Year</button>
+    <button class="pill" onclick="setRevWindow(this,180)">Last 6mo</button>
+    <button class="pill" onclick="setRevWindow(this,90)">Last 90d</button>
+    <button class="pill" onclick="setRevWindow(this,60)">Last 60d</button>
+    <button class="pill" onclick="setRevWindow(this,30)">Last 30d</button>
   </div>
 </div>
 
@@ -339,17 +341,16 @@ body{
 
 <!-- TAB NAV -->
 <div class="tabnav">
-  <button class="tab" onclick="switchTab('revenue',this)">Revenue</button>
   <button class="tab" onclick="switchTab('volume',this)">Encounter Volume</button>
+  <button class="tab" onclick="switchTab('revenue',this)">Revenue</button>
   <button class="tab" onclick="switchTab('breakdown',this)">Visit Breakdown</button>
-  <button class="tab" onclick="switchTab('compare',this)">Monthly Targets</button>
   <button class="tab" onclick="switchTab('daily',this)">Current Month</button>
-  <button class="tab live-tab active" onclick="switchTab('today',this)">Today (Live)</button>
+  <button class="tab live-tab active" onclick="switchTab('today',this)">Today</button>
 </div>
 
 <!-- PANELS -->
 <div id="panel-revenue" class="panel">
-  <div class="ph2" style="margin-bottom:4px;" id="rev-title">Revenue by Provider</div>
+  <div class="ph2" style="margin-bottom:4px;" id="rev-title">Revenue by Platform</div>
   <div class="psub">Estimated daily revenue based on per-visit rates · RH $12/visit · TD $24.33/visit · MDL $25.46/visit</div>
 
   <!-- Total revenue summary card -->
@@ -380,12 +381,15 @@ body{
   </div>
 
   <div class="chart-sec">
-    <h3>Daily Revenue ($)</h3>
-    <div class="chart-wrap" style="height:300px;"><canvas id="revTabChart"></canvas></div>
-    <div class="clegend">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--revenue)"></div>Total Daily Revenue (RH + TD + MDL)</div>
+    <h3 id="rev-30day-title">Daily Revenue — All Time</h3>
+    <div class="chart-wrap" style="height:280px;"><canvas id="revTabChart"></canvas></div>
+    <div class="clegend" style="margin-top:10px;">
+      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
     </div>
   </div>
+
   <!-- Month-to-month historical chart -->
   <div class="chart-sec" style="margin-top:28px;">
     <h3 id="rev-hist-title" style="margin-bottom:12px;">Monthly Revenue — All Time</h3>
@@ -395,10 +399,8 @@ body{
 </div>
 
 <div id="panel-volume" class="panel">
-  <div class="ph2" style="margin-bottom:4px;" id="vol-title">Encounter Volume</div>
-  <div class="psub" id="vol-sub">Total daily encounters across all providers</div>
   <div class="chart-sec">
-    <h3>Daily Encounter Volume</h3>
+    <h3 id="vol-window-title">Daily Encounter Volume — All Time</h3>
     <div class="chart-wrap" style="height:300px;"><canvas id="volChart"></canvas></div>
     <div class="clegend">
       <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
@@ -492,151 +494,23 @@ body{
   </div>
 </div>
 
-<div id="panel-compare" class="panel">
-  <div class="ph2" style="margin-bottom:4px;">Monthly Targets</div>
-  <div class="psub" id="goals-sub">Monthly encounter totals vs target — based on current filter selection</div>
-
-  <!-- Hero cards — same style as Today tab -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:24px 0;">
-
-    <!-- Roman -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--rh);"></div>
-      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman</div>
-      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
-        <div style="font-size:3rem;font-weight:800;color:var(--rh);line-height:1;" id="mgoal-rh-val">—</div>
-        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 2,520</div>
-      </div>
-      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
-        <div id="mgoal-rh-bar" style="height:100%;border-radius:6px;background:var(--rh);transition:width .8s ease;width:0%;"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span id="mgoal-rh-pct" style="font-size:1.1rem;font-weight:700;color:var(--rh);">—</span>
-        <span id="mgoal-rh-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
-      </div>
-      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-rh-needed"></div>
-    </div>
-
-    <!-- Teladoc -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--td-c);"></div>
-      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Teladoc</div>
-      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
-        <div style="font-size:3rem;font-weight:800;color:var(--td-c);line-height:1;" id="mgoal-td-val">—</div>
-        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 450</div>
-      </div>
-      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
-        <div id="mgoal-td-bar" style="height:100%;border-radius:6px;background:var(--td-c);transition:width .8s ease;width:0%;"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span id="mgoal-td-pct" style="font-size:1.1rem;font-weight:700;color:var(--td-c);">—</span>
-        <span id="mgoal-td-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
-      </div>
-      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-td-needed"></div>
-    </div>
-
-    <!-- MDLive -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mdl);"></div>
-      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">MDLive</div>
-      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
-        <div style="font-size:3rem;font-weight:800;color:var(--mdl);line-height:1;" id="mgoal-mdl-val">—</div>
-        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 150</div>
-      </div>
-      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
-        <div id="mgoal-mdl-bar" style="height:100%;border-radius:6px;background:var(--mdl);transition:width .8s ease;width:0%;"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span id="mgoal-mdl-pct" style="font-size:1.1rem;font-weight:700;color:var(--mdl);">—</span>
-        <span id="mgoal-mdl-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
-      </div>
-      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-mdl-needed"></div>
-    </div>
-
-  </div>
-
-  <!-- Revenue card -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;margin-bottom:16px;">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--revenue);"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:24px;align-items:center;">
-      <div>
-        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px;">MTD Revenue</div>
-        <div style="font-size:2.4rem;font-weight:800;color:var(--revenue);line-height:1;" id="mgoal-rev-val">—</div>
-        <div style="font-size:.7rem;color:var(--text3);margin-top:4px;">vs <span style="color:var(--text2);font-weight:600;" id="mgoal-rev-target">—</span> target</div>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:3px;">Roman</div>
-        <div style="font-size:1.3rem;font-weight:700;color:var(--rh);" id="mgoal-rev-rh">—</div>
-        <div style="font-size:.65rem;color:var(--text3);">of <span style="color:var(--text2);" id="mgoal-rev-rh-target">—</span></div>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:3px;">Teladoc</div>
-        <div style="font-size:1.3rem;font-weight:700;color:var(--td-c);" id="mgoal-rev-td">—</div>
-        <div style="font-size:.65rem;color:var(--text3);">of <span style="color:var(--text2);" id="mgoal-rev-td-target">—</span></div>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:var(--text3);margin-bottom:3px;">MDLive</div>
-        <div style="font-size:1.3rem;font-weight:700;color:var(--mdl);" id="mgoal-rev-mdl">—</div>
-        <div style="font-size:.65rem;color:var(--text3);">of <span style="color:var(--text2);" id="mgoal-rev-mdl-target">—</span></div>
-      </div>
-    </div>
-    <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden;margin-top:16px;">
-      <div id="mgoal-rev-bar" style="height:100%;border-radius:6px;background:var(--revenue);transition:width .8s ease;width:0%;"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.68rem;">
-      <span id="mgoal-rev-pct" style="color:var(--revenue);font-weight:600;">—</span>
-      <span id="mgoal-rev-status" style="color:var(--text3);">of revenue target</span>
-    </div>
-  </div>
-
-  <!-- Combined total row -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Total This Month</div>
-      <div style="font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;" id="mgoal-total">—</div>
-    </div>
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Monthly Target</div>
-      <div style="font-size:2.2rem;font-weight:800;color:var(--text2);line-height:1;">3,120</div>
-    </div>
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Overall Progress</div>
-      <div style="font-size:2.2rem;font-weight:800;line-height:1;" id="mgoal-overall-pct">—</div>
-    </div>
-    <div style="flex:1;min-width:200px;">
-      <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-        <div id="mgoal-total-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--rh),var(--td-c));transition:width .8s ease;width:0%;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Monthly totals chart — one bar per month vs target line -->
-  <div class="chart-sec">
-    <h3>Monthly Totals vs Target — All Time</h3>
-    <div class="chart-wrap" style="height:280px;"><canvas id="mgoalsChart"></canvas></div>
-    <div class="clegend" style="margin-top:10px;">
-      <div class="cleg"><div class="cleg-dot" style="background:var(--rh)"></div>Roman</div>
-      <div class="cleg"><div class="cleg-dot" style="background:var(--td-c)"></div>Teladoc</div>
-      <div class="cleg"><div class="cleg-dot" style="background:var(--mdl)"></div>MDLive</div>
-      <div class="cleg"><div class="cleg-dot" style="background:rgba(255,255,255,.3);border:1px dashed #fff;"></div>Combined Target (3,120)</div>
-    </div>
-  </div>
-</div>
 
 
 <div id="panel-today" class="panel active">
   <div class="ph2" style="margin-bottom:4px;">
-    Today (Live Feed)
+    Today
     <span class="live-badge" id="today-live-badge" style="display:flex;">
       <span class="dot"></span>
       <span id="today-date">—</span>
     </span>
   </div>
-  <div class="psub" id="today-sub">Live progress toward daily targets · updates every 5 minutes</div>
+  <div class="psub" id="today-sub">Live progress toward daily &amp; monthly targets · auto-refreshes every minute</div>
 
-  <!-- Big hero cards -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:24px 0;">
+  <!-- Section label -->
+  <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin:20px 0 10px;">Daily Progress</div>
 
+  <!-- Daily hero cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:20px;">
     <!-- Roman -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--rh);"></div>
@@ -654,14 +528,13 @@ body{
       </div>
       <div style="margin-top:12px;font-size:.7rem;color:var(--text3);" id="today-rh-needed"></div>
     </div>
-
     <!-- Teladoc -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--td-c);"></div>
       <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Teladoc</div>
       <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
         <div style="font-size:3.5rem;font-weight:800;color:var(--td-c);line-height:1;" id="today-td-val">—</div>
-        <div style="font-size:1rem;color:var(--text3);margin-bottom:8px;">/ 15</div>
+        <div style="font-size:1rem;color:var(--text3);margin-bottom:8px;">/ 10</div>
       </div>
       <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
         <div id="today-td-bar" style="height:100%;border-radius:6px;background:var(--td-c);transition:width .8s ease;width:0%;"></div>
@@ -672,7 +545,6 @@ body{
       </div>
       <div style="margin-top:12px;font-size:.7rem;color:var(--text3);" id="today-td-needed"></div>
     </div>
-
     <!-- MDLive -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mdl);"></div>
@@ -690,28 +562,80 @@ body{
       </div>
       <div style="margin-top:12px;font-size:.7rem;color:var(--text3);" id="today-mdl-needed"></div>
     </div>
-
   </div>
 
-  <!-- Combined total row -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Total Encounters Today</div>
-      <div style="font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;" id="today-total">—</div>
-    </div>
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Combined Target</div>
-      <div style="font-size:2.2rem;font-weight:800;color:var(--text2);line-height:1;">104</div>
-    </div>
-    <div>
-      <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Overall Progress</div>
-      <div style="font-size:2.2rem;font-weight:800;line-height:1;" id="today-overall-pct">—</div>
-    </div>
-    <div style="flex:1;min-width:200px;">
-      <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-        <div id="today-total-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--rh),var(--td-c));transition:width .8s ease;width:0%;"></div>
+  <!-- Daily combined total -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Total Today</div><div style="font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;" id="today-total">—</div></div>
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Daily Target</div><div style="font-size:2.2rem;font-weight:800;color:var(--text2);line-height:1;">99</div></div>
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Progress</div><div style="font-size:2.2rem;font-weight:800;line-height:1;" id="today-overall-pct">—</div></div>
+    <div style="flex:1;min-width:200px;"><div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;"><div id="today-total-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--rh),var(--td-c));transition:width .8s ease;width:0%;"></div></div></div>
+  </div>
+
+  <!-- Section label -->
+  <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:10px;">Month-to-Date Progress — <span id="today-month-label">Mar 2026</span></div>
+
+  <!-- Monthly hero cards (no revenue) -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:20px;">
+    <!-- Roman monthly -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--rh);"></div>
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Roman</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
+        <div style="font-size:3rem;font-weight:800;color:var(--rh);line-height:1;" id="mgoal-rh-val">—</div>
+        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 2,520</div>
       </div>
+      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
+        <div id="mgoal-rh-bar" style="height:100%;border-radius:6px;background:var(--rh);transition:width .8s ease;width:0%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span id="mgoal-rh-pct" style="font-size:1.1rem;font-weight:700;color:var(--rh);">—</span>
+        <span id="mgoal-rh-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
+      </div>
+      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-rh-needed"></div>
     </div>
+    <!-- Teladoc monthly -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--td-c);"></div>
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">Teladoc</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
+        <div style="font-size:3rem;font-weight:800;color:var(--td-c);line-height:1;" id="mgoal-td-val">—</div>
+        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 300</div>
+      </div>
+      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
+        <div id="mgoal-td-bar" style="height:100%;border-radius:6px;background:var(--td-c);transition:width .8s ease;width:0%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span id="mgoal-td-pct" style="font-size:1.1rem;font-weight:700;color:var(--td-c);">—</span>
+        <span id="mgoal-td-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
+      </div>
+      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-td-needed"></div>
+    </div>
+    <!-- MDLive monthly -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mdl);"></div>
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;">MDLive</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">
+        <div style="font-size:3rem;font-weight:800;color:var(--mdl);line-height:1;" id="mgoal-mdl-val">—</div>
+        <div style="font-size:1rem;color:var(--text3);margin-bottom:6px;">/ 150</div>
+      </div>
+      <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden;margin-bottom:10px;">
+        <div id="mgoal-mdl-bar" style="height:100%;border-radius:6px;background:var(--mdl);transition:width .8s ease;width:0%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span id="mgoal-mdl-pct" style="font-size:1.1rem;font-weight:700;color:var(--mdl);">—</span>
+        <span id="mgoal-mdl-badge" style="font-size:.68rem;padding:3px 8px;border-radius:10px;background:var(--surface2);color:var(--text3);">of target</span>
+      </div>
+      <div style="margin-top:10px;font-size:.7rem;color:var(--text3);" id="mgoal-mdl-needed"></div>
+    </div>
+  </div>
+
+  <!-- Monthly combined total -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Total This Month</div><div style="font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;" id="mgoal-total">—</div></div>
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Monthly Target</div><div style="font-size:2.2rem;font-weight:800;color:var(--text2);line-height:1;">2,970</div></div>
+    <div><div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;">Overall Progress</div><div style="font-size:2.2rem;font-weight:800;line-height:1;" id="mgoal-overall-pct">—</div></div>
+    <div style="flex:1;min-width:200px;"><div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;"><div id="mgoal-total-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--rh),var(--td-c));transition:width .8s ease;width:0%;"></div></div></div>
   </div>
 
 </div>
@@ -792,9 +716,10 @@ const RATES = {
 
 // ── Global state ──
 let ALL_DATA     = {};   // { "Jan 24": {labels,rh,td,mdl,rev,...}, ... }
-let ACTIVE_YEAR  = 'all';
-let ACTIVE_MONTH = 'all';
-let ACTIVE_TYPE  = 'all';
+let ACTIVE_YEAR   = 'all';
+let ACTIVE_MONTH  = 'all';
+let ACTIVE_TYPE   = 'all';
+let REV_WINDOW    = 0;  // 0 = All Time (default)
 let encChart=null, revChart=null;
 let revTabChart=null, volChart=null, pieChart=null, cmpChart=null;
 window._tabChartsBuilt = false;
@@ -1045,9 +970,9 @@ function buildCharts(d) {
   const rc = document.getElementById('revChart').getContext('2d');
   revChart = new Chart(rc,{
     type:'line', data:{labels:d.labels, datasets:[
-      {label:'Roman',data:d.rhRev||[], borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.06)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#2dd4a0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
-      {label:'Teladoc',     data:d.tdRev||[], borderColor:'#7b9ef0',backgroundColor:'rgba(123,158,240,.06)',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#7b9ef0',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
-      {label:'MDLive',      data:d.mdlRev||[],borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.06)', fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#f5a623',pointBorderColor:'#0d1117',pointBorderWidth:1.5,borderWidth:2},
+      {label:'Roman',data:d.rhRev||[], borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.08)',fill:true, tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2.5},
+      {label:'Teladoc', data:d.tdRev||[], borderColor:'#7b9ef0',backgroundColor:'transparent',fill:false,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2.5},
+      {label:'MDLive',  data:d.mdlRev||[],borderColor:'#f5a623',backgroundColor:'transparent',fill:false,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2.5},
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{...tooltipDefaults(),callbacks:{label:i=>' $'+i.raw.toLocaleString()}}},
@@ -1331,6 +1256,141 @@ function updateBreakdownStats(tRH,tTD,tTD1,tTD2,tMDL,tMDL1,tMDL2,tot) {
 // ── Revenue historical chart ──
 let revHistChart = null;
 
+// ── Get last 30 calendar days of data across all sheets ──
+function getLast30DaysData() {
+  const allDays = [];
+  Object.entries(ALL_DATA).forEach(([, d]) => {
+    // If year filter is active, only include that year's data
+    if (ACTIVE_YEAR !== 'all' && d.year !== +ACTIVE_YEAR) return;
+    d.labels.forEach((label, i) => {
+      const parts = label.split('/');
+      if (parts.length < 2) return;
+      const date = new Date(d.year, +parts[0]-1, +parts[1]);
+      allDays.push({
+        date, label,
+        rh:  d.rh[i]  || 0,
+        td:  d.td[i]  || 0,
+        mdl: d.mdl[i] || 0,
+        rhRev:  (d.rhRev  || [])[i] || 0,
+        tdRev:  (d.tdRev  || [])[i] || 0,
+        mdlRev: (d.mdlRev || [])[i] || 0,
+      });
+    });
+  });
+  allDays.sort((a,b) => a.date - b.date);
+  // Year filter trumps window — show all days in that year
+  if (ACTIVE_YEAR !== 'all') return allDays;
+  const window = +REV_WINDOW;
+  return window === 0 ? allDays : allDays.slice(-window);
+}
+
+let rev30BarChart = null;
+
+function buildRevTab30Day() {
+  const days = getLast30DaysData();
+  if (!days.length) return;
+
+  const labels   = days.map(d => d.label);
+  const rhRevs   = days.map(d => d.rhRev);
+  const tdRevs   = days.map(d => d.tdRev);
+  const mdlRevs  = days.map(d => d.mdlRev);
+  const rhEnc    = days.map(d => d.rh);
+  const tdEnc    = days.map(d => d.td);
+  const mdlEnc   = days.map(d => d.mdl);
+  const totRev   = days.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev, 0);
+
+  // Update 30-day total summary card
+  const rl = document.getElementById('rev-total-label');
+  if (rl) rl.textContent = 'Total Revenue — Last 30 Days';
+  const rv = document.getElementById('rev-grand-total');
+  if (rv) rv.textContent = '$'+Math.round(totRev).toLocaleString();
+  const rs = document.getElementById('rev-total-sub');
+  if (rs) rs.textContent = '30 days · $'+Math.round(totRev/30).toLocaleString()+'/day avg';
+  const rhTot = days.reduce((a,d)=>a+d.rhRev,0);
+  const tdTot = days.reduce((a,d)=>a+d.tdRev,0);
+  const mdlTot= days.reduce((a,d)=>a+d.mdlRev,0);
+  const tot   = totRev||1;
+  const s = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  s('rev-total-rh',  '$'+Math.round(rhTot).toLocaleString());
+  s('rev-pct-rh',    Math.round(rhTot/tot*100)+'% of total');
+  s('rev-total-td',  '$'+Math.round(tdTot).toLocaleString());
+  s('rev-pct-td',    Math.round(tdTot/tot*100)+'% of total');
+  s('rev-total-mdl', '$'+Math.round(mdlTot).toLocaleString());
+  s('rev-pct-mdl',   Math.round(mdlTot/tot*100)+'% of total');
+
+  // ── Top: 3 separate revenue lines, no dots ──
+  if (revTabChart) { revTabChart.destroy(); revTabChart = null; }
+  // Update chart title
+  const rtitle = document.getElementById('rev-30day-title');
+  if (rtitle) {
+    const tMap = {0:'All Time',30:'Last 30 Days',60:'Last 60 Days',90:'Last 90 Days',180:'Last 6 Months',365:'Last Year'};
+    const winLabel2 = ACTIVE_YEAR !== 'all' ? String(ACTIVE_YEAR) : (tMap[REV_WINDOW] || REV_WINDOW+' Days');
+    rtitle.textContent = 'Daily Revenue — '+winLabel2;
+  }
+  const rc = document.getElementById('revTabChart');
+  if (rc) {
+    revTabChart = new Chart(rc.getContext('2d'), {
+      type:'bar',
+      data:{ labels, datasets:[
+        { label:'Roman',   data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:2, stack:'s' },
+        { label:'Teladoc', data:tdRevs,  backgroundColor:'rgba(123,158,240,.82)',borderWidth:0, borderRadius:2, stack:'s' },
+        { label:'MDLive',  data:mdlRevs, backgroundColor:'rgba(245,166,35,.82)', borderWidth:0, borderRadius:2, stack:'s' },
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{...tooltipDefaults(), callbacks:{
+            label: i => ' '+i.dataset.label+': $'+i.raw.toLocaleString(),
+            footer: items => 'Total: $'+items.reduce((a,i)=>a+i.raw,0).toLocaleString()
+          }}
+        },
+        scales:{
+          x:{ stacked:true, grid:{color:GRID}, ticks:{maxRotation:45} },
+          y:{ stacked:true, grid:{color:GRID}, beginAtZero:true,
+              ticks:{callback:v=>'$'+(v>=1000?(v/1000).toFixed(0)+'k':v)} }
+        }
+      }
+    });
+  }
+
+  // ── Bottom: stacked bar (encounters by day) ──
+  // Update bar chart title to match window
+  const barTitle = document.getElementById('rev-bar-title');
+  if (barTitle) {
+    const tMap2 = {0:'All Time',30:'Last 30 Days',60:'Last 60 Days',90:'Last 90 Days',180:'Last 6 Months',365:'Last Year'};
+    const barWinLabel = ACTIVE_YEAR !== 'all' ? String(ACTIVE_YEAR) : (tMap2[REV_WINDOW]||REV_WINDOW+' Days');
+    barTitle.textContent = 'Daily Revenue — '+barWinLabel+' (Stacked)';
+  }
+
+  if (rev30BarChart) { rev30BarChart.destroy(); rev30BarChart = null; }
+  const bc = document.getElementById('rev30BarChart');
+  if (bc) {
+    rev30BarChart = new Chart(bc.getContext('2d'), {
+      type:'bar',
+      data:{ labels, datasets:[
+        { label:'Roman',   data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:2, stack:'s' },
+        { label:'Teladoc', data:tdRevs,  backgroundColor:'rgba(123,158,240,.82)',borderWidth:0, borderRadius:2, stack:'s' },
+        { label:'MDLive',  data:mdlRevs, backgroundColor:'rgba(245,166,35,.82)', borderWidth:0, borderRadius:2, stack:'s' },
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{...tooltipDefaults(), callbacks:{
+          label: i => ' '+i.dataset.label+': $'+i.raw.toLocaleString(),
+          footer: items => 'Total: $'+items.reduce((a,i)=>a+i.raw,0).toLocaleString()
+        }}},
+        scales:{
+          x:{stacked:true, grid:{color:GRID}, ticks:{maxRotation:45}},
+          y:{stacked:true, grid:{color:GRID}, beginAtZero:true,
+             ticks:{callback:v=>'$'+(v>=1000?(v/1000).toFixed(1)+'k':v)}}
+        }
+      }
+    });
+  }
+}
+
 function buildRevHistChart() {
   if (revHistChart) { revHistChart.destroy(); revHistChart = null; }
   const gc = document.getElementById('revHistChart');
@@ -1381,9 +1441,9 @@ function buildRevHistChart() {
   revHistChart = new Chart(gc.getContext('2d'), {
     type:'bar',
     data:{ labels, datasets:[
-      {label:'Roman', data:rhRevs,  backgroundColor:'rgba(45,212,160,.82)', borderWidth:0, borderRadius:3, stack:'s'},
-      {label:'Teladoc',      data:tdRevs,  backgroundColor:'rgba(123,158,240,.82)',borderWidth:0, borderRadius:3, stack:'s'},
-      {label:'MDLive',       data:mdlRevs, backgroundColor:'rgba(245,166,35,.82)', borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'Roman',   data:rhRevs,  backgroundColor:'rgba(45,212,160,.85)', borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'Teladoc', data:tdRevs,  backgroundColor:'rgba(123,158,240,.85)',borderWidth:0, borderRadius:3, stack:'s'},
+      {label:'MDLive',  data:mdlRevs, backgroundColor:'rgba(245,166,35,.85)', borderWidth:0, borderRadius:3, stack:'s'},
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -1405,53 +1465,27 @@ function buildRevHistChart() {
 }
 
 function updateRevSummary() {
-  const filtered = getFilteredData();
-  if (!filtered) return;
+  // Always show last 30 days in the summary card
+  const days = getLast30DaysData();
+  if (!days.length) return;
 
-  // Count months in selection for label
-  const filteredSheets = Object.entries(ALL_DATA).filter(([name, sd]) => {
-    const yearOk  = ACTIVE_YEAR==='all'  || sd.year===+ACTIVE_YEAR  || yearFromTabName(name)===+ACTIVE_YEAR;
-    const monthOk = ACTIVE_MONTH==='all' || sd.month===+ACTIVE_MONTH;
-    return yearOk && monthOk;
-  });
-  const numMonths = filteredSheets.length;
-
-  // Compute revenue per provider using correct sub-type rates
-  let totalRHRev=0, totalTDRev=0, totalMDLRev=0;
-  filteredSheets.forEach(([,d]) => {
-    totalRHRev  += d.rh.reduce((a,b)=>a+b,0) * RATES.rh;
-    const td1t   = (d.td1||[]).reduce((a,b)=>a+b,0);
-    const td2t   = (d.td2||[]).reduce((a,b)=>a+b,0);
-    const mdl1t  = (d.mdl1||[]).reduce((a,b)=>a+b,0);
-    const mdl2t  = (d.mdl2||[]).reduce((a,b)=>a+b,0);
-    totalTDRev  += td1t*RATES.td1  + td2t*RATES.td2;
-    totalMDLRev += mdl1t*RATES.mdl1 + mdl2t*RATES.mdl2;
-  });
-  const grandTotal = totalRHRev + totalTDRev + totalMDLRev;
+  const totalRHRev  = days.reduce((a,d)=>a+d.rhRev,  0);
+  const totalTDRev  = days.reduce((a,d)=>a+d.tdRev,  0);
+  const totalMDLRev = days.reduce((a,d)=>a+d.mdlRev, 0);
+  const grandTotal  = totalRHRev + totalTDRev + totalMDLRev;
   const tot = grandTotal || 1;
   const fmt = v => '$'+Math.round(v).toLocaleString();
   const pct = v => Math.round(v/tot*100)+'%';
+  const set = (id,val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
 
-  // Update label based on filter
-  const moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let label = 'Total Revenue — ';
-  if (ACTIVE_YEAR==='all' && ACTIVE_MONTH==='all') {
-    label += 'All Time ('+numMonths+' months)';
-  } else if (ACTIVE_MONTH!=='all' && ACTIVE_YEAR==='all') {
-    label += moNames[+ACTIVE_MONTH-1]+' across all years ('+numMonths+' months)';
-  } else if (ACTIVE_MONTH==='all' && ACTIVE_YEAR!=='all') {
-    label += 'All of '+ACTIVE_YEAR+' ('+numMonths+' months)';
-  } else {
-    label += moNames[+ACTIVE_MONTH-1]+' '+ACTIVE_YEAR;
-  }
-
-  const el = id => document.getElementById(id);
-  const set = (id,val) => { const e=el(id); if(e) e.textContent=val; };
-
-  set('rev-total-label',  label);
+  const winLabel = {0:'All Time',30:'Last 30 Days',60:'Last 60 Days',90:'Last 90 Days',180:'Last 6 Months',365:'Last Year'};
+  const summaryLabel = ACTIVE_YEAR !== 'all' ? String(ACTIVE_YEAR) : (winLabel[REV_WINDOW]||REV_WINDOW+' Days');
+  set('rev-total-label',  'Total Revenue — '+summaryLabel);
   set('rev-grand-total',  fmt(grandTotal));
-  set('rev-total-sub',    numMonths+' month'+(numMonths!==1?'s':'')+' · '+
-    Math.round(grandTotal/Math.max(numMonths,1)).toLocaleString()+'/mo avg');
+  const days30 = getLast30DaysData().length || 1;
+  set('rev-total-sub', REV_WINDOW===0
+    ? days30+' days · '+fmt(grandTotal/days30)+'/day avg'
+    : REV_WINDOW+' days · '+fmt(grandTotal/REV_WINDOW)+'/day avg');
   set('rev-total-rh',     fmt(totalRHRev));
   set('rev-pct-rh',       pct(totalRHRev)+' of total');
   set('rev-total-td',     fmt(totalTDRev));
@@ -1519,8 +1553,7 @@ function applyFilters() {
 
   const volTitle = document.getElementById('vol-title');
   if (volTitle) volTitle.textContent = 'Encounter Volume — ' + filterLabel;
-  const revTitle = document.getElementById('rev-title');
-  if (revTitle) revTitle.textContent = 'Revenue by Provider — ' + filterLabel;
+  // rev-title stays as "Revenue by Platform" — window label shown in chart heading
   const bdTitle = document.getElementById('breakdown-title');
   if (bdTitle) bdTitle.textContent = 'Visit Breakdown — ' + filterLabel;
   const bdSub = document.getElementById('breakdown-sub');
@@ -1528,8 +1561,11 @@ function applyFilters() {
   // Rebuild day-of-week chart when filters change
 
 
-  // Revenue summary card — always update when filters change
+  // Revenue tab — only rebuild if panel is visible; it manages its own window
   updateRevSummary();
+  if (document.getElementById('panel-revenue').classList.contains('active')) {
+    buildRevTab30Day();
+  }
   if (revHistChart || document.getElementById('panel-revenue').classList.contains('active')) buildRevHistChart();
 
   // Monthly targets — always update when filters change
@@ -1539,11 +1575,7 @@ function applyFilters() {
   const d = getFilteredData();
   if (!d) return;
   // Always rebuild revTabChart with filtered data (not gated by _tabChartsBuilt)
-  if (revTabChart) {
-    revTabChart.data.labels=d.labels;
-    revTabChart.data.datasets[0].data=(d.rhRev||[]).map((v,i)=>(v||0)+((d.tdRev||[])[i]||0)+((d.mdlRev||[])[i]||0));
-    revTabChart.update('active');
-  }
+  // revTabChart is rebuilt by buildRevTab30Day — no manual update needed here
 
   // Always update breakdown stats & charts regardless of tab state
   const tRH=d.rh.reduce((a,b)=>a+b,0),tTD=d.td.reduce((a,b)=>a+b,0),tMDL=d.mdl.reduce((a,b)=>a+b,0),tot=(tRH+tTD+tMDL)||1;
@@ -1681,6 +1713,9 @@ async function loadSheet(background=false) {
         }
         if (Object.keys(allParsed).length) {
           ALL_DATA = allParsed;
+          REV_WINDOW = 30; // always default to 30 days on load
+          const rwg2 = document.getElementById('rev-window-group');
+          if (rwg2) rwg2.querySelectorAll('.pill').forEach((p,i) => p.classList.toggle('active', i===0));
           applyFilters();
           updateStats(getCurrentMonthData()||FB_MAR26);
           document.getElementById('feed-dot').classList.remove('live');
@@ -1716,14 +1751,25 @@ async function loadSheet(background=false) {
     saveCache(t);  // Cache raw response for next load
     ALL_DATA = parsed;
     window._lastData = getCurrentMonthData()||FB_MAR26;
+    REV_WINDOW = 0; // All Time default
+    // Reset revenue window pill to Last 30d
+    const rwg = document.getElementById('rev-window-group');
+    if (rwg) {
+      rwg.querySelectorAll('.pill').forEach((p,i) => p.classList.toggle('active', i===0));
+    }
+    buildRevTab30Day();
     updateRevSummary();
     buildRevHistChart();
     buildDowChart();
     const todayPanel = document.getElementById('panel-today');
-    if (todayPanel && todayPanel.classList.contains('active')) updateTodayTab();
+    if (todayPanel && todayPanel.classList.contains('active')) {
+      updateTodayTab();
+      updateGoalsTab(getFilteredData());
+    }
     // Refresh goals tab if open
     const goalsPanel = document.getElementById('panel-compare');
     updateGoalsTab(getFilteredData()); // always refresh monthly targets
+  updateTodayTab(); // keep today in sync
 
     // Daily badge shows current month day count
     const curMonth = getCurrentMonthData();
@@ -1771,7 +1817,7 @@ function switchTab(id,el){
   document.getElementById('panel-'+id).classList.add('active');
   el.classList.add('active');
   setTimeout(()=>{
-    if(id==='today'){ updateTodayTab(); return; }
+
     if(id==='daily'){ encChart&&encChart.resize(); revChart&&revChart.resize(); return; }
     const d = getFilteredData()||FB_MAR26;
     if (!window._tabChartsBuilt) {
@@ -1779,20 +1825,21 @@ function switchTab(id,el){
       window._tabChartsBuilt = true;
     } else {
       if(id==='revenue'){
-        // Rebuild revenue line with current filtered data
-        const fd = getFilteredData();
-        if (fd && revTabChart) {
-          revTabChart.data.labels = fd.labels;
-          revTabChart.data.datasets[0].data = (fd.rhRev||[]).map((v,i)=>(v||0)+((fd.tdRev||[])[i]||0)+((fd.mdlRev||[])[i]||0));
-          revTabChart.update('active');
-        }
-        revTabChart&&revTabChart.resize();
+        buildRevTab30Day();
         updateRevSummary();
         buildRevHistChart();
+        setTimeout(()=>{ revTabChart&&revTabChart.resize(); rev30BarChart&&rev30BarChart.resize(); revHistChart&&revHistChart.resize(); }, 50);
       }
-      if(id==='volume')    volChart&&volChart.resize();
+      if(id==='volume'){
+        if (!window._tabChartsBuilt) {
+          buildTabCharts(getFilteredData()||FB_MAR26);
+          window._tabChartsBuilt = true;
+        }
+        buildVolWindowChart();
+        setTimeout(()=>volChart&&volChart.resize(), 50);
+      }
       if(id==='breakdown'){ pieChart&&pieChart.resize(); buildDowChart(); }
-      if(id==='compare'){   updateGoalsTab(getFilteredData()); }
+      if(id==='today'){ updateTodayTab(); updateGoalsTab(getFilteredData()); }
     }
   },80);
 }
@@ -1955,10 +2002,10 @@ function updateTodayTab() {
     }
 
     setHero('rh',  rhVal,  84);
-    setHero('td',  tdVal,  15);
+    setHero('td',  tdVal,  10);
     setHero('mdl', mdlVal, 5);
 
-    const totalTarget = 104;
+    const totalTarget = 99;
     const totalPct = Math.round(total / totalTarget * 100);
     const totalColor = totalPct>=100?'#22c55e':totalPct>=80?'#f5a623':'#f87171';
     const totEl=document.getElementById('today-total');        if(totEl) totEl.textContent=total;
@@ -1968,11 +2015,11 @@ function updateTodayTab() {
 }
 
 // ── Monthly Targets ──
-const GOALS = { rh: 84, td: 15, mdl: 5 };
-const MONTHLY_GOALS = { rh: 2520, td: 450, mdl: 150, total: 3120 };
+const GOALS = { rh: 84, td: 10, mdl: 5 };
+const MONTHLY_GOALS = { rh: 2520, td: 300, mdl: 150, total: 2970 };
 const MONTHLY_REV_GOALS = {
   rh:    2520 * RATES.rh,                          // $30,240
-  td:    Math.round(450  * ((RATES.td1+RATES.td2)/2)),  // $11,475
+  td:    Math.round(300  * ((RATES.td1+RATES.td2)/2)),  // $7,650
   mdl:   Math.round(150  * ((RATES.mdl1+RATES.mdl2)/2)),// $3,975
   get total() { return this.rh + this.td + this.mdl; }  // ~$45,690
 };
@@ -2001,6 +2048,8 @@ function updateGoalsTab(d) {
   const moName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()];
   const sub = document.getElementById('goals-sub');
   if (sub) sub.textContent = 'MTD totals vs monthly target — '+moName+' '+now.getFullYear()+' ('+curMonth.labels.length+' days recorded)';
+  const mlEl = document.getElementById('today-month-label');
+  if (mlEl) mlEl.textContent = moName+' '+now.getFullYear();
 
   // Hero card helper
   function setHero(id, actual, target, color) {
@@ -2132,6 +2181,53 @@ function manualRefresh(btn) {
   });
 }
 
+// ── Revenue window filter ──
+function setRevWindow(el, days) {
+  document.getElementById('rev-window-group')
+    .querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  REV_WINDOW = days;
+  buildRevTab30Day();
+  updateRevSummary();
+  buildVolWindowChart();
+  const tMap = { 0:'All Time', 30:'Last 30 Days', 60:'Last 60 Days', 90:'Last 90 Days', 180:'Last 6 Months', 365:'Last Year' };
+  const label = tMap[days] || days+' Days';
+  const title = document.getElementById('rev-30day-title');
+  if (title) title.textContent = 'Daily Revenue — '+label;
+}
+
+function buildVolWindowChart() {
+  if (!volChart) return;
+  const tMap = {0:'All Time',30:'Last 30 Days',60:'Last 60 Days',90:'Last 90 Days',180:'Last 6 Months',365:'Last Year'};
+  const label = tMap[REV_WINDOW] || REV_WINDOW+' Days';
+
+  // Update title
+  const vt = document.getElementById('vol-window-title');
+  if (vt) {
+    const volLabel = ACTIVE_YEAR !== 'all' ? String(ACTIVE_YEAR) : label;
+    vt.textContent = 'Daily Encounter Volume — '+volLabel;
+  }
+
+  // Get windowed days
+  const days = getLast30DaysData(); // uses REV_WINDOW
+  const labels  = days.map(d => d.label);
+  const rhEnc   = days.map(d => d.rh);
+  const tdEnc   = days.map(d => d.td);
+  const mdlEnc  = days.map(d => d.mdl);
+
+  volChart.data.labels = labels;
+  volChart.data.datasets[0].data = rhEnc;
+  volChart.data.datasets[1].data = tdEnc;
+  volChart.data.datasets[2].data = mdlEnc;
+  volChart.update('active');
+
+  // Update stat cards
+  const s = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v.toLocaleString(); };
+  s('vol-rh',  rhEnc.reduce((a,b)=>a+b,0));
+  s('vol-td',  tdEnc.reduce((a,b)=>a+b,0));
+  s('vol-mdl', mdlEnc.reduce((a,b)=>a+b,0));
+}
+
 // ── Year filter ──
 function setYear(el, year){
   document.querySelectorAll('.filterbar .filter-group')[0]
@@ -2139,6 +2235,11 @@ function setYear(el, year){
   el.classList.add('active');
   ACTIVE_YEAR = year;
   applyFilters();
+  // Rebuild revenue + volume windowed charts (year trumps window)
+  buildRevTab30Day();
+  updateRevSummary();
+  buildVolWindowChart();
+  if (revHistChart) buildRevHistChart();
   const cur = getCurrentMonthData();
   if (cur) document.getElementById('days-rec').textContent = cur.labels.length+' days recorded';
 }
@@ -2152,14 +2253,6 @@ function setMonth(el, month){
   applyFilters();
 }
 
-// ── Type filter ──
-function setType(el, type){
-  document.querySelectorAll('.filterbar .filter-group')[2]
-    .querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  ACTIVE_TYPE = type;
-  applyFilters();
-}
 </script>
 </body>
 </html>

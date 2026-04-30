@@ -1,1 +1,1 @@
-git revert <commit-hash>
+

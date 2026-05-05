@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -102,14 +101,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .gs-pill-dot{display:none}
 
 /* THREE-CHART ROW */
-.three-charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.three-charts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 
 /* FOOTER */
 .footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:10px 28px;font-size:.64rem;color:var(--text3)}
 
 /* RESPONSIVE */
 @media(max-width:900px){
-  .three-charts{grid-template-columns:1fr 1fr}
+  .three-charts{grid-template-columns:1fr}
   .summary-strip{grid-template-columns:repeat(3,1fr)}
 }
 
@@ -252,6 +251,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
+<!-- TODAY -->
+  <div>
+    <div class="sec-hd">
+      <span class="sec-label">Daily Revenue</span>
+      <span class="sec-note" id="today-line">—</span>
+    </div>
+    <div class="rev-wrap">
+      <div class="rev-hd"><span class="rev-title">Today vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
+      <div class="rev-rail">
+        <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
+        <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
+      </div>
+      <div class="rev-ends"><span>$0</span><span>$1,500</span></div>
+    </div>
+  </div>
+
 <!-- CHARTS ROW -->
   <div>
     <div class="sec-hd">
@@ -282,32 +297,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         </div>
       </div>
 
-      <!-- State volume bar -->
-      <div class="chart-card">
-        <h3>Encounters by State — April</h3>
-        <div style="position:relative;height:260px"><canvas id="stateChart" role="img" aria-label="April encounter volume by state horizontal bar chart"></canvas></div>
-        <div class="clegend">
-          <div class="cleg"><div class="cleg-dot" style="background:#534AB7"></div>Volume (sorted)</div>
-          <div class="cleg" style="color:var(--text3)">PA active · pending</div>
-        </div>
-      </div>
 
-    </div>
-  </div>
 
-<!-- TODAY -->
-  <div>
-    <div class="sec-hd">
-      <span class="sec-label">Daily Revenue</span>
-      <span class="sec-note" id="today-line">—</span>
-    </div>
-    <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Today vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
-      <div class="rev-rail">
-        <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
-        <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
-      </div>
-      <div class="rev-ends"><span>$0</span><span>$1,500</span></div>
     </div>
   </div>
 
@@ -341,7 +332,7 @@ const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiPAn
 const RATES={rh:12,td1:23,td2:28,mdl1:25,mdl2:28};
 const GOALS={rh:100,td:5,mdl:5,dayRev:1500,moRh:3750,moTd:150,moMdl:150,moRev:45000};
 let ALL_DATA={};
-let revChart=null,volChart=null,stateChart=null,histChart=null;
+let revChart=null,histChart=null;
 
 /* ── CSV PARSING ── */
 function parseCSVRow(r){const cols=[];let cur='',inQ=false;for(const ch of r){if(ch==='"'){inQ=!inQ;continue;}if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}cols.push(cur.trim());return cols;}
@@ -550,53 +541,6 @@ function updateCharts(){
               y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>'$'+(v>=1000?Math.round(v/1000)+'k':v)}}}}
   });
 
-  // State volume chart — static April data, only build once
-  if(!stateChart) buildStateChart();
-}
-
-function buildStateChart(){
-  const states=[
-    {s:'TX',v:860},{s:'NC',v:573},{s:'AZ',v:432},{s:'OR',v:322},
-    {s:'IN',v:244},{s:'TN',v:155},{s:'WA',v:87}, {s:'AL',v:56},
-    {s:'OH',v:23}, {s:'IL',v:19}, {s:'MI',v:13}, {s:'PA',v:0},
-  ];
-  const max=860;
-  // Purple ramp: lightest for lowest, darkest for highest
-  const clr=v=>{
-    if(v===0)return '#3C3489';
-    const t=v/max;
-    if(t>0.75)return '#534AB7';
-    if(t>0.5) return '#7F77DD';
-    if(t>0.25)return '#AFA9EC';
-    return '#CECBF6';
-  };
-  const el=document.getElementById('stateChart');if(!el)return;
-  stateChart=new Chart(el.getContext('2d'),{
-    type:'bar',
-    data:{
-      labels:states.map(d=>d.s),
-      datasets:[{
-        data:states.map(d=>d.v),
-        backgroundColor:states.map(d=>d.v===0?'#2d3a50':clr(d.v)),
-        borderWidth:0,
-        borderRadius:3,
-      }]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{...TT,callbacks:{
-          label:i=>i.raw===0?' PA — active, not yet seeing members':' '+i.raw.toLocaleString()+' encounters',
-          footer:i=>{const pct=Math.round(i[0].raw/2784*100);return i[0].raw>0?pct+'% of April total':''}
-        }}
-      },
-      scales:{
-        x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:11,weight:'500'},maxRotation:0}},
-        y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>v>=1000?Math.round(v/1000)+'k':v}}
-      }
-    }
-  });
 }
 
 function updateHistChart(){

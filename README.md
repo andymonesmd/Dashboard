@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -90,6 +89,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .cleg{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--text2)}
 .cleg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 
+/* GOAL STATUS WIDGET — compact pills */
+.gs-row{display:flex;gap:10px;flex-wrap:wrap}
+.gs-pill{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:8px 14px;flex:1;min-width:140px}
+.gs-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.gs-pill-name{font-size:.68rem;color:var(--text2);white-space:nowrap}
+.gs-pill-track{flex:1;background:var(--border);border-radius:3px;height:4px;overflow:hidden}
+.gs-pill-fill{height:100%;border-radius:3px;transition:width .9s ease;width:0}
+.gs-pill-pct{font-size:.72rem;font-weight:700;white-space:nowrap;min-width:32px;text-align:right}
+.gs-pill-val{font-size:.68rem;color:var(--text3);white-space:nowrap}
+
 /* THREE-CHART ROW */
 .three-charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 
@@ -102,6 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .summary-strip{grid-template-columns:1fr 1fr}
 }
 @media(max-width:700px){
+  .goal-status-row{grid-template-columns:1fr}
   .header{padding:12px 16px}
   .header-left h1{font-size:1.15rem}
   .dash{padding:14px 16px;gap:20px}
@@ -174,7 +184,33 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
-
+  <!-- GOAL STATUS WIDGET -->
+  <div>
+    <div class="sec-hd"><span class="sec-label">Today vs Target</span><span class="sec-note" id="gs-days-note">—</span></div>
+    <div class="gs-row">
+      <div class="gs-pill">
+        <div class="gs-pill-dot" id="gs-rh-dot" style="background:var(--rh)"></div>
+        <span class="gs-pill-name">Roman</span>
+        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-rh-fill"></div></div>
+        <span class="gs-pill-val" id="gs-rh-val">—</span>
+        <span class="gs-pill-pct" id="gs-rh-pct">—</span>
+      </div>
+      <div class="gs-pill">
+        <div class="gs-pill-dot" id="gs-td-dot" style="background:var(--td)"></div>
+        <span class="gs-pill-name">Teladoc</span>
+        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-td-fill"></div></div>
+        <span class="gs-pill-val" id="gs-td-val">—</span>
+        <span class="gs-pill-pct" id="gs-td-pct">—</span>
+      </div>
+      <div class="gs-pill">
+        <div class="gs-pill-dot" id="gs-mdl-dot" style="background:var(--mdl)"></div>
+        <span class="gs-pill-name">MDLive</span>
+        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-mdl-fill"></div></div>
+        <span class="gs-pill-val" id="gs-mdl-val">—</span>
+        <span class="gs-pill-pct" id="gs-mdl-pct">—</span>
+      </div>
+    </div>
+  </div>
 
 <!-- CHARTS ROW -->
   <div>
@@ -222,34 +258,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- TODAY -->
   <div>
     <div class="sec-hd">
-      <span class="sec-label">Today</span>
+      <span class="sec-label">Daily Revenue</span>
       <span class="sec-note" id="today-line">—</span>
     </div>
-    <div class="today-grid">
-      <div class="pcard rh">
-        <div class="pcard-name">Roman</div>
-        <div class="pcard-hero"><div class="pcard-val" style="color:var(--rh)" id="t-rh-v">—</div><div class="pcard-target">/ 100</div></div>
-        <div class="prog"><div class="prog-fill" id="t-rh-bar" style="background:var(--rh)"></div></div>
-        <div class="pcard-foot"><span class="pcard-pct" id="t-rh-pct" style="color:var(--rh)">—</span><span class="badge" id="t-rh-badge">of target</span></div>
-        <div class="pcard-note" id="t-rh-note"></div>
-      </div>
-      <div class="pcard td">
-        <div class="pcard-name">Teladoc</div>
-        <div class="pcard-hero"><div class="pcard-val" style="color:var(--td)" id="t-td-v">—</div><div class="pcard-target">/ 5</div></div>
-        <div class="prog"><div class="prog-fill" id="t-td-bar" style="background:var(--td)"></div></div>
-        <div class="pcard-foot"><span class="pcard-pct" id="t-td-pct" style="color:var(--td)">—</span><span class="badge" id="t-td-badge">of target</span></div>
-        <div class="pcard-note" id="t-td-note"></div>
-      </div>
-      <div class="pcard mdl">
-        <div class="pcard-name">MDLive</div>
-        <div class="pcard-hero"><div class="pcard-val" style="color:var(--mdl)" id="t-mdl-v">—</div><div class="pcard-target">/ 5</div></div>
-        <div class="prog"><div class="prog-fill" id="t-mdl-bar" style="background:var(--mdl)"></div></div>
-        <div class="pcard-foot"><span class="pcard-pct" id="t-mdl-pct" style="color:var(--mdl)">—</span><span class="badge" id="t-mdl-badge">of target</span></div>
-        <div class="pcard-note" id="t-mdl-note"></div>
-      </div>
-    </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Daily Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">Today vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
         <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
@@ -262,31 +275,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- 30-DAY GOALS -->
   <div>
     <div class="sec-hd">
-      <span class="sec-label">Rolling 30-Day Goals</span>
+      <span class="sec-label">Rolling 30-Day Revenue</span>
       <span class="sec-note" id="goals-note">last 30 days</span>
     </div>
-    <div class="goals-grid">
-      <div class="gcard">
-        <div class="gcard-top"><span class="gcard-name">Roman</span><span class="badge" id="g-rh-badge" style="background:rgba(45,212,160,.12);color:var(--rh)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--rh)" id="g-rh-v">—</div><div class="gcard-of">/ 3,750</div></div>
-        <div class="prog"><div class="prog-fill" id="g-rh-bar" style="background:var(--rh)"></div></div>
-        <div class="gcard-note" id="g-rh-note"></div>
-      </div>
-      <div class="gcard">
-        <div class="gcard-top"><span class="gcard-name">Teladoc</span><span class="badge" id="g-td-badge" style="background:rgba(123,158,240,.12);color:var(--td)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--td)" id="g-td-v">—</div><div class="gcard-of">/ 150</div></div>
-        <div class="prog"><div class="prog-fill" id="g-td-bar" style="background:var(--td)"></div></div>
-        <div class="gcard-note" id="g-td-note"></div>
-      </div>
-      <div class="gcard">
-        <div class="gcard-top"><span class="gcard-name">MDLive</span><span class="badge" id="g-mdl-badge" style="background:rgba(245,166,35,.12);color:var(--mdl)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--mdl)" id="g-mdl-v">—</div><div class="gcard-of">/ 150</div></div>
-        <div class="prog"><div class="prog-fill" id="g-mdl-bar" style="background:var(--mdl)"></div></div>
-        <div class="gcard-note" id="g-mdl-note"></div>
-      </div>
-    </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Rolling 30-Day Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$45,000</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">30-Day vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$45,000</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
         <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
@@ -542,8 +535,30 @@ function updateHeader(){
   if(sh.length){const f=sh[0];set('date-range',moN[f.month-1]+' '+f.year+' – Present');}
 }
 
+function updateGoalStatus(){
+  const day=getLatestDay();if(!day)return;
+  const now=new Date();
+  const pt=now.toLocaleString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'});
+  set('gs-days-note', pt+' PT');
+  function fill(k,val,target){
+    const pct=Math.round(val/target*100);
+    const c=pct>=100?'#22c55e':pct>=75?'#f5a623':'#f87171';
+    set('gs-'+k+'-val', val+' / '+target);
+    set('gs-'+k+'-pct', pct+'%');
+    const f=document.getElementById('gs-'+k+'-fill');
+    if(f){f.style.width=Math.min(pct,100)+'%';f.style.background=c;}
+    const p=document.getElementById('gs-'+k+'-pct');
+    if(p)p.style.color=c;
+    const d=document.getElementById('gs-'+k+'-dot');
+    if(d)d.style.background=c;
+  }
+  fill('rh', day.rh||0,  GOALS.rh);
+  fill('td', day.td||0,  GOALS.td);
+  fill('mdl',day.mdl||0, GOALS.mdl);
+}
+
 function updateAll(){
-  updateToday();updateGoals();updateSummary();updateCharts();updateHistChart();updateHeader();
+  updateToday();updateGoals();updateGoalStatus();updateSummary();updateCharts();updateHistChart();updateHeader();
 }
 
 /* ── CACHE ── */

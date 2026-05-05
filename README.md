@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-
+<title>Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
@@ -391,13 +391,12 @@ const TT={backgroundColor:'#1c2333',borderColor:'#2d3a50',borderWidth:1,titleCol
 
 /* ── UPDATERS ── */
 function updateToday(){
-  const early=isBeforeThreePST();
   const now=new Date();
   const pt=now.toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-  set('today-line',early?pt+' PT · data locks at 3 PM':pt+' PT');
+  set('today-line',pt+' PT');
   const day=getLatestDay();
-  const rv=early?0:(day?.rh||0),tv=early?0:(day?.td||0),mv=early?0:(day?.mdl||0);
-  const dayRev=early?0:((day?.rhRev||0)+(day?.tdRev||0)+(day?.mdlRev||0));
+  const rv=day?.rh||0,tv=day?.td||0,mv=day?.mdl||0;
+  const dayRev=(day?.rhRev||0)+(day?.tdRev||0)+(day?.mdlRev||0);
   function fillCard(k,val,tgt){
     const pct=Math.round(val/tgt*100),b=bStyle(pct);
     set('t-'+k+'-v',val);set('t-'+k+'-pct',pct+'%');

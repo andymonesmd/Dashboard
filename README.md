@@ -90,14 +90,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .cleg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 
 /* GOAL STATUS WIDGET — compact pills */
-.gs-row{display:flex;gap:10px;flex-wrap:wrap}
-.gs-pill{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:8px 14px;flex:1;min-width:140px}
-.gs-pill-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.gs-pill-name{font-size:.68rem;color:var(--text2);white-space:nowrap}
-.gs-pill-track{flex:1;background:var(--border);border-radius:3px;height:4px;overflow:hidden}
-.gs-pill-fill{height:100%;border-radius:3px;transition:width .9s ease;width:0}
-.gs-pill-pct{font-size:.72rem;font-weight:700;white-space:nowrap;min-width:32px;text-align:right}
-.gs-pill-val{font-size:.68rem;color:var(--text3);white-space:nowrap}
+.gs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gs-pill{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;position:relative;overflow:hidden}
+.gs-pill-top{display:flex;align-items:center;justify-content:space-between}
+.gs-pill-name{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:500}
+.gs-pill-pct{font-size:2rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.gs-pill-track{background:var(--border);border-radius:4px;height:7px;overflow:hidden}
+.gs-pill-fill{height:100%;border-radius:4px;transition:width .9s ease;width:0}
+.gs-pill-val{font-size:.72rem;color:var(--text3)}
+.gs-pill-dot{display:none}
 
 /* THREE-CHART ROW */
 .three-charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -111,7 +112,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .summary-strip{grid-template-columns:1fr 1fr}
 }
 @media(max-width:700px){
-  .goal-status-row{grid-template-columns:1fr}
+  .gs-row{grid-template-columns:1fr}
   .header{padding:12px 16px}
   .header-left h1{font-size:1.15rem}
   .dash{padding:14px 16px;gap:20px}
@@ -189,25 +190,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="sec-hd"><span class="sec-label">Today vs Target</span><span class="sec-note" id="gs-days-note">—</span></div>
     <div class="gs-row">
       <div class="gs-pill">
-        <div class="gs-pill-dot" id="gs-rh-dot" style="background:var(--rh)"></div>
-        <span class="gs-pill-name">Roman</span>
+        <div class="gs-pill-top">
+          <span class="gs-pill-name">Roman</span>
+          <span class="gs-pill-pct" id="gs-rh-pct" style="color:var(--rh)">—</span>
+        </div>
         <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-rh-fill"></div></div>
         <span class="gs-pill-val" id="gs-rh-val">—</span>
-        <span class="gs-pill-pct" id="gs-rh-pct">—</span>
       </div>
       <div class="gs-pill">
-        <div class="gs-pill-dot" id="gs-td-dot" style="background:var(--td)"></div>
-        <span class="gs-pill-name">Teladoc</span>
+        <div class="gs-pill-top">
+          <span class="gs-pill-name">Teladoc</span>
+          <span class="gs-pill-pct" id="gs-td-pct" style="color:var(--td)">—</span>
+        </div>
         <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-td-fill"></div></div>
         <span class="gs-pill-val" id="gs-td-val">—</span>
-        <span class="gs-pill-pct" id="gs-td-pct">—</span>
       </div>
       <div class="gs-pill">
-        <div class="gs-pill-dot" id="gs-mdl-dot" style="background:var(--mdl)"></div>
-        <span class="gs-pill-name">MDLive</span>
+        <div class="gs-pill-top">
+          <span class="gs-pill-name">MDLive</span>
+          <span class="gs-pill-pct" id="gs-mdl-pct" style="color:var(--mdl)">—</span>
+        </div>
         <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-mdl-fill"></div></div>
         <span class="gs-pill-val" id="gs-mdl-val">—</span>
-        <span class="gs-pill-pct" id="gs-mdl-pct">—</span>
       </div>
     </div>
   </div>

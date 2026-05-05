@@ -110,33 +110,70 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 /* RESPONSIVE */
 @media(max-width:900px){
   .three-charts{grid-template-columns:1fr 1fr}
-  .summary-strip{grid-template-columns:1fr 1fr}
+  .summary-strip{grid-template-columns:repeat(3,1fr)}
 }
-@media(max-width:700px){
-  .gs-row{grid-template-columns:1fr}
-  .header{padding:12px 16px}
-  .header-left h1{font-size:1.15rem}
-  .dash{padding:14px 16px;gap:20px}
-  .today-grid,.goals-grid{grid-template-columns:1fr;gap:10px}
-  .pcard-val{font-size:2.5rem}
+
+/* ── TABLET ── */
+@media(max-width:768px){
+  .header{padding:12px 16px;gap:8px}
+  .header-left h1{font-size:1.1rem}
+  .header-left .sub{font-size:.65rem}
+  .dash{padding:14px 16px;gap:16px}
+  .summary-strip{grid-template-columns:1fr 1fr 1fr}
+  .scard{padding:16px 18px}
+  .scard-label{font-size:.58rem}
+  .scard-val{font-size:2rem}
+  .scard-sub{font-size:.65rem}
+  .gs-row{grid-template-columns:1fr 1fr 1fr}
+  .gs-pill{padding:14px 16px}
+  .gs-pill-pct{font-size:1.6rem}
   .three-charts{grid-template-columns:1fr}
-  .summary-strip{grid-template-columns:1fr 1fr}
-  .scard{padding:14px 16px}
-  .scard-val{font-size:1.8rem}
+  .rev-wrap{padding:14px 16px}
   .footer{padding:8px 16px}
 }
+
+/* ── PHONE ── */
 @media(max-width:480px){
+  html{font-size:13px}
   .header{padding:10px 12px}
-  .dash{padding:12px 12px;gap:16px}
-  .pcard{padding:16px}
-  .pcard-val{font-size:2.2rem}
-  .gcard-val{font-size:1.6rem}
-  .summary-strip{grid-template-columns:1fr 1fr}
-  .rev-wrap,.chart-card{padding:14px}
+  .header-left h1{font-size:1rem}
   .header-right .refresh-btn span{display:none}
+  .header-right .live-pill{font-size:.65rem;padding:4px 9px}
+  .dash{padding:10px 12px;gap:14px}
+
+  /* Summary: stack to 1 column */
+  .summary-strip{grid-template-columns:1fr !important}
+  .scard{padding:14px 16px}
+  .scard-label{font-size:.6rem;margin-bottom:6px}
+  .scard-val{font-size:2.2rem}
+  .scard-sub{font-size:.67rem}
+
+  /* Goal status pills: stack */
+  .gs-row{grid-template-columns:1fr !important}
+  .gs-pill{padding:14px 16px;gap:10px}
+  .gs-pill-pct{font-size:1.6rem}
+
+  /* Charts: single column, shorter */
+  .three-charts{grid-template-columns:1fr !important}
+  .chart-card{padding:14px}
+  .chart-card h3{font-size:.7rem}
+
+  /* Revenue bars */
+  .rev-wrap{padding:12px 14px}
+  .rev-title{font-size:.6rem}
+  .rev-goal{font-size:.6rem}
+
+  /* Section headers */
+  .sec-label{font-size:.56rem}
+  .sec-note{font-size:.62rem}
+
+  .footer{padding:8px 12px;font-size:.6rem}
 }
+
+/* ── VERY SMALL ── */
 @media(max-width:360px){
-  .summary-strip{grid-template-columns:1fr}
+  .scard-val{font-size:1.9rem}
+  .gs-pill-pct{font-size:1.4rem}
 }
 </style>
 </head>
@@ -165,18 +202,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="summary-strip" style="grid-template-columns:repeat(3,1fr)">
       <div class="scard">
         <div class="scard-label">Avg Daily · Roman</div>
-        <div class="scard-val" style="color:var(--rh)" id="s-avg">—</div>
-        <div class="scard-sub" id="s-avg-sub">encounters / day</div>
+        <div class="scard-val" id="s-avg">—</div>
+        <div class="scard-sub" id="s-avg-prev" style="margin-top:4px">—</div>
+        <div class="scard-sub" id="s-avg-sub" style="margin-top:2px">encounters / day</div>
       </div>
       <div class="scard">
         <div class="scard-label">Total Encounters · Last 30 Days</div>
         <div class="scard-val" id="s-enc">—</div>
-        <div class="scard-sub" id="s-enc-sub">all platforms</div>
+        <div class="scard-sub" id="s-enc-prev" style="margin-top:4px">—</div>
+        <div class="scard-sub" id="s-enc-sub" style="margin-top:2px">all platforms</div>
       </div>
       <div class="scard">
-        <div class="scard-label">Total Revenue · Last 30 Days</div>
-        <div class="scard-val" style="color:var(--rev)" id="s-rev">—</div>
-        <div class="scard-sub" id="s-rev-sub">estimated</div>
+        <div class="scard-label">Avg Daily Revenue</div>
+        <div class="scard-val" id="s-rev">—</div>
+        <div class="scard-sub" id="s-rev-prev" style="margin-top:4px">—</div>
+        <div class="scard-sub" id="s-rev-sub" style="margin-top:2px">last 30 days</div>
       </div>
     </div>
   </div>
@@ -450,12 +490,41 @@ function updateSummary(){
   const tEnc=tRH+tTD+tMDL,tRev=days.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0),n=days.length||1;
   const pRH=prev.reduce((a,d)=>a+d.rh,0),pEnc=prev.reduce((a,d)=>a+d.rh+d.td+d.mdl,0);
   const pRev=prev.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0),pN=prev.length||1;
-  set('s-avg',(tRH/n).toFixed(1));
-  set('s-avg-sub','encounters / day'+delta(tRH/n, pRH/pN));
-  set('s-enc',tEnc.toLocaleString());
-  set('s-enc-sub','RH '+tRH.toLocaleString()+' · TD '+tTD+' · MDL '+tMDL+delta(tEnc,pEnc));
-  set('s-rev','$'+Math.round(tRev).toLocaleString());
-  set('s-rev-sub','$'+Math.round(tRev/n).toLocaleString()+'/day avg'+delta(Math.round(tRev),Math.round(pRev)));
+  // Avg daily Roman
+  const avgRH=Math.round(tRH/n), prevAvgRH=Math.round(pRH/pN);
+  const rhUp=avgRH>prevAvgRH, rhSame=avgRH===prevAvgRH;
+  const rhColor=rhUp?'#22c55e':rhSame?'var(--text2)':'#f87171';
+  const rhArrow=rhUp?'↑':rhSame?'→':'↓';
+  const rhDiff=Math.abs(avgRH-prevAvgRH);
+  const avgEl=document.getElementById('s-avg');
+  if(avgEl){avgEl.textContent=avgRH.toLocaleString();avgEl.style.color=rhColor;}
+  set('s-avg-prev', rhArrow+' '+prevAvgRH+' prev · '+rhArrow+' '+rhDiff+(rhUp?' more':rhSame?'':' less')+'/day');
+  const avgPrevEl=document.getElementById('s-avg-prev');
+  if(avgPrevEl)avgPrevEl.style.color=rhColor;
+
+  // Total encounters
+  const pTD=prev.reduce((a,d)=>a+d.td,0), pMDL=prev.reduce((a,d)=>a+d.mdl,0);
+  const pEncTot=pEnc;
+  const encUp=tEnc>pEncTot, encSame=tEnc===pEncTot;
+  const encColor=encUp?'#22c55e':encSame?'var(--text2)':'#f87171';
+  const encArrow=encUp?'↑':encSame?'→':'↓';
+  const encDiff=Math.abs(tEnc-pEncTot);
+  const encEl=document.getElementById('s-enc');
+  if(encEl){encEl.textContent=tEnc.toLocaleString();encEl.style.color=encColor;}
+  set('s-enc-prev', encArrow+' '+pEncTot.toLocaleString()+' prev · '+encArrow+' '+encDiff.toLocaleString()+(encUp?' more':encSame?'':' less'));
+  const encPrevEl=document.getElementById('s-enc-prev');
+  if(encPrevEl)encPrevEl.style.color=encColor;
+  set('s-enc-sub','RH '+tRH.toLocaleString()+' · TD '+tTD+' · MDL '+tMDL);
+  const avgRev=Math.round(tRev/n), prevAvgRev=Math.round(pRev/pN);
+  const revUp=avgRev>prevAvgRev, revSame=avgRev===prevAvgRev;
+  const revColor=revUp?'#22c55e':revSame?'var(--text2)':'#f87171';
+  const revArrow=revUp?'↑':revSame?'→':'↓';
+  const revDiff=Math.abs(avgRev-prevAvgRev);
+  const revEl=document.getElementById('s-rev');
+  if(revEl){revEl.textContent='$'+avgRev.toLocaleString();revEl.style.color=revColor;}
+  set('s-rev-prev', revArrow+' $'+prevAvgRev.toLocaleString()+' prev · '+revArrow+' $'+revDiff.toLocaleString()+(revUp?' more':revSame?'':' less')+'/day');
+  const prevEl=document.getElementById('s-rev-prev');
+  if(prevEl)prevEl.style.color=revColor;
 }
 
 function updateCharts(){
@@ -478,7 +547,7 @@ function updateCharts(){
         footer:items=>'Total: $'+items.reduce((a,i)=>a+(i.raw||0),0).toLocaleString()
       }}},
       scales:{x:{grid:{color:GRID},ticks:{maxRotation:45,autoSkip:true,maxTicksLimit:8}},
-              y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>'$'+(v>=1000?(v/1000).toFixed(1)+'k':v)}}}}
+              y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>'$'+(v>=1000?Math.round(v/1000)+'k':v)}}}}
   });
 
   // State volume chart — static April data, only build once
@@ -524,7 +593,7 @@ function buildStateChart(){
       },
       scales:{
         x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:11,weight:'500'},maxRotation:0}},
-        y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v}}
+        y:{grid:{color:GRID},beginAtZero:true,ticks:{callback:v=>v>=1000?Math.round(v/1000)+'k':v}}
       }
     }
   });

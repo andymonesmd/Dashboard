@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Dashboard</title>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
@@ -195,16 +195,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         </div>
       </div>
 
-      <!-- State volume bar -->
-      <div class="chart-card">
-        <h3>Encounters by State — April</h3>
-        <div style="position:relative;height:260px"><canvas id="stateChart" role="img" aria-label="April encounter volume by state horizontal bar chart"></canvas></div>
-        <div class="clegend">
-          <div class="cleg"><div class="cleg-dot" style="background:#534AB7"></div>Volume (sorted)</div>
-          <div class="cleg" style="color:var(--text3)">PA active · pending</div>
-        </div>
-      </div>
-
       <!-- Monthly history -->
       <div class="chart-card">
         <h3>Monthly Revenue — Jan 2025+</h3>
@@ -213,6 +203,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
           <div class="cleg"><div class="cleg-dot" style="background:#2dd4a0"></div>Roman</div>
           <div class="cleg"><div class="cleg-dot" style="background:#7b9ef0"></div>Teladoc</div>
           <div class="cleg"><div class="cleg-dot" style="background:#f5a623"></div>MDLive</div>
+        </div>
+      </div>
+
+      <!-- State volume bar -->
+      <div class="chart-card">
+        <h3>Encounters by State — April</h3>
+        <div style="position:relative;height:260px"><canvas id="stateChart" role="img" aria-label="April encounter volume by state horizontal bar chart"></canvas></div>
+        <div class="clegend">
+          <div class="cleg"><div class="cleg-dot" style="background:#534AB7"></div>Volume (sorted)</div>
+          <div class="cleg" style="color:var(--text3)">PA active · pending</div>
         </div>
       </div>
 
@@ -249,12 +249,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Daily Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,380</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">Daily Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
         <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$1,380</span></div>
+      <div class="rev-ends"><span>$0</span><span>$1,500</span></div>
     </div>
   </div>
 
@@ -286,12 +286,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Rolling 30-Day Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$41,400</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">Rolling 30-Day Revenue</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$45,000</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
         <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$41,400</span></div>
+      <div class="rev-ends"><span>$0</span><span>$45,000</span></div>
     </div>
   </div>
 
@@ -306,7 +306,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <script>
 const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiPAnaMGK8ywEVf0Tfnm9U6cTQo9Ts6DX3DOoGQNcgvHj2pnCAO0_N3/exec";
 const RATES={rh:12,td1:23,td2:28,mdl1:25,mdl2:28};
-const GOALS={rh:100,td:5,mdl:5,dayRev:1380,moRh:3750,moTd:150,moMdl:150,moRev:41400};
+const GOALS={rh:100,td:5,mdl:5,dayRev:1500,moRh:3750,moTd:150,moMdl:150,moRev:45000};
 let ALL_DATA={};
 let revChart=null,volChart=null,stateChart=null,histChart=null;
 

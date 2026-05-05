@@ -1,3 +1,4 @@
+
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -161,26 +162,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- SUMMARY STRIP -->
   <div>
     <div class="sec-hd"><span class="sec-label">Last 30 Days — At a Glance</span></div>
-    <div class="summary-strip">
+    <div class="summary-strip" style="grid-template-columns:repeat(3,1fr)">
       <div class="scard">
-        <div class="scard-label">Total Encounters</div>
+        <div class="scard-label">Avg Daily · Roman</div>
+        <div class="scard-val" style="color:var(--rh)" id="s-avg">—</div>
+        <div class="scard-sub" id="s-avg-sub">encounters / day</div>
+      </div>
+      <div class="scard">
+        <div class="scard-label">Total Encounters · Last 30 Days</div>
         <div class="scard-val" id="s-enc">—</div>
         <div class="scard-sub" id="s-enc-sub">all platforms</div>
       </div>
       <div class="scard">
-        <div class="scard-label">Total Revenue</div>
+        <div class="scard-label">Total Revenue · Last 30 Days</div>
         <div class="scard-val" style="color:var(--rev)" id="s-rev">—</div>
         <div class="scard-sub" id="s-rev-sub">estimated</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Avg Daily · Roman</div>
-        <div class="scard-val" style="color:var(--rh)" id="s-avg">—</div>
-        <div class="scard-sub">encounters / day</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Active Days</div>
-        <div class="scard-val" id="s-days">—</div>
-        <div class="scard-sub" id="s-range">—</div>
       </div>
     </div>
   </div>
@@ -426,14 +422,40 @@ function updateGoals(){
   if(gb){gb.style.left=Math.max(mp,3)+'%';gb.style.color=mc;gb.style.borderColor=mc;gb.textContent='$'+Math.round(tRev).toLocaleString()+' · '+mp+'%';}
 }
 
+function getPrev30(){
+  // The 30 days before the current rolling 30
+  const all=[];
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-30); cutoff.setHours(0,0,0,0);
+  const prevCutoff=new Date(); prevCutoff.setDate(prevCutoff.getDate()-60); prevCutoff.setHours(0,0,0,0);
+  Object.entries(ALL_DATA).forEach(([,d])=>{
+    d.labels.forEach((label,i)=>{
+      const p=label.split('/');if(p.length<2)return;
+      const date=new Date(d.year,+p[0]-1,+p[1]);
+      if(date>=prevCutoff&&date<cutoff)
+        all.push({date,rh:d.rh[i]||0,td:d.td[i]||0,mdl:d.mdl[i]||0,
+          rhRev:(d.rhRev||[])[i]||0,tdRev:(d.tdRev||[])[i]||0,mdlRev:(d.mdlRev||[])[i]||0});
+    });
+  });
+  return all;
+}
+function delta(cur,prev){
+  if(!prev||prev===0)return '';
+  const d=cur-prev,pct=Math.round(Math.abs(d)/prev*100);
+  return d>=0?' (+'+(d>999?Math.round(d/1000,1)+'k':d)+' vs prev)':' (−'+(Math.abs(d)>999?Math.round(Math.abs(d)/1000,1)+'k':Math.abs(d))+' vs prev)';
+}
 function updateSummary(){
   const days=getRolling30();if(!days.length)return;
+  const prev=getPrev30();
   const tRH=days.reduce((a,d)=>a+d.rh,0),tTD=days.reduce((a,d)=>a+d.td,0),tMDL=days.reduce((a,d)=>a+d.mdl,0);
   const tEnc=tRH+tTD+tMDL,tRev=days.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0),n=days.length||1;
-  set('s-enc',tEnc.toLocaleString());set('s-enc-sub','RH '+tRH.toLocaleString()+' · TD '+tTD+' · MDL '+tMDL);
-  set('s-rev','$'+Math.round(tRev).toLocaleString());set('s-rev-sub','$'+Math.round(tRev/n).toLocaleString()+'/day avg');
-  set('s-avg',(tRH/n).toFixed(1));set('s-days',n);
-  const first=days[0],last=days[n-1];set('s-range',first.label+' – '+last.label);
+  const pRH=prev.reduce((a,d)=>a+d.rh,0),pEnc=prev.reduce((a,d)=>a+d.rh+d.td+d.mdl,0);
+  const pRev=prev.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0),pN=prev.length||1;
+  set('s-avg',(tRH/n).toFixed(1));
+  set('s-avg-sub','encounters / day'+delta(tRH/n, pRH/pN));
+  set('s-enc',tEnc.toLocaleString());
+  set('s-enc-sub','RH '+tRH.toLocaleString()+' · TD '+tTD+' · MDL '+tMDL+delta(tEnc,pEnc));
+  set('s-rev','$'+Math.round(tRev).toLocaleString());
+  set('s-rev-sub','$'+Math.round(tRev/n).toLocaleString()+'/day avg'+delta(Math.round(tRev),Math.round(pRev)));
 }
 
 function updateCharts(){

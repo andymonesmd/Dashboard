@@ -18,7 +18,7 @@ html{font-size:14px}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:48px}
 
 /* HEADER */
-.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:10;background:var(--bg)}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
 .header-left h1{font-size:1.3rem;font-weight:700;letter-spacing:-.01em}
 .header-left .sub{font-size:.68rem;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ldot{width:7px;height:7px;border-radius:2px;display:inline-block}
@@ -132,7 +132,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 <div class="header">
   <div class="header-left">
-    <h1>Mones TeleDash</h1>
+    <h1>Dashboard</h1>
     <div class="sub">
       <span id="date-range">—</span>&nbsp;·&nbsp;
       <span class="ldot" style="background:var(--rh)"></span>Roman&nbsp;·&nbsp;
@@ -228,14 +228,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="today-grid">
       <div class="pcard rh">
         <div class="pcard-name">Roman</div>
-        <div class="pcard-hero"><div class="pcard-val" style="color:var(--rh)" id="t-rh-v">—</div><div class="pcard-target">/ 84</div></div>
+        <div class="pcard-hero"><div class="pcard-val" style="color:var(--rh)" id="t-rh-v">—</div><div class="pcard-target">/ 100</div></div>
         <div class="prog"><div class="prog-fill" id="t-rh-bar" style="background:var(--rh)"></div></div>
         <div class="pcard-foot"><span class="pcard-pct" id="t-rh-pct" style="color:var(--rh)">—</span><span class="badge" id="t-rh-badge">of target</span></div>
         <div class="pcard-note" id="t-rh-note"></div>
       </div>
       <div class="pcard td">
         <div class="pcard-name">Teladoc</div>
-        <div class="pcard-hero"><div class="pcard-val" style="color:var(--td)" id="t-td-v">—</div><div class="pcard-target">/ 10</div></div>
+        <div class="pcard-hero"><div class="pcard-val" style="color:var(--td)" id="t-td-v">—</div><div class="pcard-target">/ 5</div></div>
         <div class="prog"><div class="prog-fill" id="t-td-bar" style="background:var(--td)"></div></div>
         <div class="pcard-foot"><span class="pcard-pct" id="t-td-pct" style="color:var(--td)">—</span><span class="badge" id="t-td-badge">of target</span></div>
         <div class="pcard-note" id="t-td-note"></div>
@@ -268,19 +268,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="goals-grid">
       <div class="gcard">
         <div class="gcard-top"><span class="gcard-name">Roman</span><span class="badge" id="g-rh-badge" style="background:rgba(45,212,160,.12);color:var(--rh)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--rh)" id="g-rh-v">—</div><div class="gcard-of">/ 2,520</div></div>
+        <div class="gcard-nums"><div class="gcard-val" style="color:var(--rh)" id="g-rh-v">—</div><div class="gcard-of">/ 3,750</div></div>
         <div class="prog"><div class="prog-fill" id="g-rh-bar" style="background:var(--rh)"></div></div>
         <div class="gcard-note" id="g-rh-note"></div>
       </div>
       <div class="gcard">
         <div class="gcard-top"><span class="gcard-name">Teladoc</span><span class="badge" id="g-td-badge" style="background:rgba(123,158,240,.12);color:var(--td)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--td)" id="g-td-v">—</div><div class="gcard-of">/ 200</div></div>
+        <div class="gcard-nums"><div class="gcard-val" style="color:var(--td)" id="g-td-v">—</div><div class="gcard-of">/ 150</div></div>
         <div class="prog"><div class="prog-fill" id="g-td-bar" style="background:var(--td)"></div></div>
         <div class="gcard-note" id="g-td-note"></div>
       </div>
       <div class="gcard">
         <div class="gcard-top"><span class="gcard-name">MDLive</span><span class="badge" id="g-mdl-badge" style="background:rgba(245,166,35,.12);color:var(--mdl)">—%</span></div>
-        <div class="gcard-nums"><div class="gcard-val" style="color:var(--mdl)" id="g-mdl-v">—</div><div class="gcard-of">/ 100</div></div>
+        <div class="gcard-nums"><div class="gcard-val" style="color:var(--mdl)" id="g-mdl-v">—</div><div class="gcard-of">/ 150</div></div>
         <div class="prog"><div class="prog-fill" id="g-mdl-bar" style="background:var(--mdl)"></div></div>
         <div class="gcard-note" id="g-mdl-note"></div>
       </div>
@@ -306,7 +306,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <script>
 const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiPAnaMGK8ywEVf0Tfnm9U6cTQo9Ts6DX3DOoGQNcgvHj2pnCAO0_N3/exec";
 const RATES={rh:12,td1:23,td2:28,mdl1:25,mdl2:28};
-const GOALS={rh:84,td:10,mdl:5,dayRev:1380,moRh:2520,moTd:200,moMdl:100,moRev:41400};
+const GOALS={rh:100,td:5,mdl:5,dayRev:1380,moRh:3750,moTd:150,moMdl:150,moRev:41400};
 let ALL_DATA={};
 let revChart=null,volChart=null,stateChart=null,histChart=null;
 

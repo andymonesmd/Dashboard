@@ -18,7 +18,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 /* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
-.header-left h1{font-size:1.3rem;font-weight:700;letter-spacing:-.01em}
+.header-title{font-size:1.1rem;font-weight:700;letter-spacing:-.01em;color:var(--text)}
 .header-left .sub{font-size:.68rem;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ldot{width:7px;height:7px;border-radius:2px;display:inline-block}
 .header-right{display:flex;align-items:center;gap:8px}
@@ -125,7 +125,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 <div class="header">
   <div class="header-left">
-    <h1>Dashboard</h1>
+    <div class="header-title">Dashboard</div>
     <div class="sub">
       <span id="date-range">—</span>&nbsp;·&nbsp;
       <span class="ldot" style="background:var(--rh)"></span>Roman&nbsp;·&nbsp;

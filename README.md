@@ -327,6 +327,15 @@ function getRolling30(){
   const recent=collect(cutoff);
   return recent.length?recent:collect(null).slice(-30);
 }
+function getRolling30ExcludeToday(){
+  // Exclude today using explicit Y/M/D comparison to avoid timezone issues
+  const now=new Date();
+  const ty=now.getFullYear(),tm=now.getMonth()+1,td=now.getDate();
+  return getRolling30().filter(d=>
+    !(d.date.getFullYear()===ty && d.date.getMonth()+1===tm && d.date.getDate()===td)
+  );
+}
+
 function getLatestDay(){
   const sh=Object.values(ALL_DATA);if(!sh.length)return null;
   sh.sort((a,b)=>a.year!==b.year?a.year-b.year:a.month-b.month);
@@ -396,7 +405,7 @@ function updateGoalStatus(){
 }
 
 function updateGoals(){
-  const days=getRolling30();if(!days.length)return;
+  const days=getRolling30ExcludeToday();if(!days.length)return;
   const tRev=days.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0);
   set('goals-note','last '+days.length+' days');
   const mp=Math.min(Math.round(tRev/GOALS.moRev*100),100),mc=mp>=100?'#22c55e':mp>=75?'#f5a623':'#f87171';
@@ -406,7 +415,7 @@ function updateGoals(){
 }
 
 function updateSummary(){
-  const days=getRolling30();if(!days.length)return;
+  const days=getRolling30ExcludeToday();if(!days.length)return;
   const prev=getPrev30();
   const tRH=days.reduce((a,d)=>a+d.rh,0),tTD=days.reduce((a,d)=>a+d.td,0),tMDL=days.reduce((a,d)=>a+d.mdl,0);
   const tEnc=tRH+tTD+tMDL,tRev=days.reduce((a,d)=>a+d.rhRev+d.tdRev+d.mdlRev,0),n=days.length||1;

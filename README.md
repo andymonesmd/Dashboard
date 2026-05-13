@@ -278,12 +278,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <span class="sec-note" id="goals-note">last 30 days</span>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">30-Day vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$45,000</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">30-Day vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$50,000</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
         <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$45,000</span></div>
+      <div class="rev-ends"><span>$0</span><span>$50,000</span></div>
     </div>
   </div>
 
@@ -297,7 +297,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <script>
 const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiPAnaMGK8ywEVf0Tfnm9U6cTQo9Ts6DX3DOoGQNcgvHj2pnCAO0_N3/exec";
 const RATES={rh:12,td1:23,td2:28,mdl1:25,mdl2:28};
-const GOALS={rh:100,td:5,mdl:5,dayRev:1500,moRh:3750,moTd:150,moMdl:150,moRev:45000};
+const GOALS={rh:100,td:5,mdl:5,dayRev:1500,moRh:3750,moTd:150,moMdl:150,moRev:50000};
 let ALL_DATA={};
 let revChart=null,histChart=null;
 

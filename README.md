@@ -78,23 +78,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:10px 28px;font-size:.64rem;color:var(--text3)}
 
 /* RESPONSIVE */
-
-/* Large desktop — side by side charts */
 @media(min-width:901px){
   .two-charts{grid-template-columns:1fr 1fr}
   .summary-strip{grid-template-columns:repeat(3,1fr)}
   .gs-row{grid-template-columns:repeat(3,1fr)}
 }
-
-/* Tablet / small laptop (≤900px) — stack charts */
 @media(max-width:900px){
   .two-charts{grid-template-columns:1fr !important}
   .summary-strip{grid-template-columns:1fr 1fr}
   .gs-row{grid-template-columns:repeat(3,1fr)}
   .dash{padding:16px 20px;gap:22px}
 }
-
-/* Tablet portrait (≤768px) */
 @media(max-width:768px){
   .header{padding:10px 16px;gap:6px}
   .header-title{font-size:.85rem}
@@ -111,8 +105,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .rev-wrap{padding:12px 16px}
   .footer{padding:8px 16px}
 }
-
-/* Phone (≤480px) */
 @media(max-width:480px){
   html{font-size:13px}
   .header{padding:8px 12px;gap:6px}
@@ -140,8 +132,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .sec-note{font-size:.6rem}
   .footer{padding:8px 12px;font-size:.6rem}
 }
-
-/* Very small (≤360px) */
 @media(max-width:360px){
   .summary-strip{grid-template-columns:1fr}
   .scard-val{font-size:1.7rem}
@@ -233,12 +223,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <span class="sec-note" id="today-line">—</span>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">Today vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$1,500</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">Today vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$2,000</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
         <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$1,500</span></div>
+      <div class="rev-ends"><span>$0</span><span>$2,000</span></div>
     </div>
   </div>
 
@@ -278,12 +268,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <span class="sec-note" id="goals-note">last 30 days</span>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd"><span class="rev-title">30-Day vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$50,000</strong></span></div>
+      <div class="rev-hd"><span class="rev-title">30-Day vs Goal</span><span class="rev-goal">Goal <strong style="color:var(--text2)">$60,000</strong></span></div>
       <div class="rev-rail">
         <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
         <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$50,000</span></div>
+      <div class="rev-ends"><span>$0</span><span>$60,000</span></div>
     </div>
   </div>
 
@@ -297,7 +287,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <script>
 const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiPAnaMGK8ywEVf0Tfnm9U6cTQo9Ts6DX3DOoGQNcgvHj2pnCAO0_N3/exec";
 const RATES={rh:12,td1:23,td2:28,mdl1:25,mdl2:28};
-const GOALS={rh:100,td:5,mdl:5,dayRev:1500,moRh:3750,moTd:150,moMdl:150,moRev:50000};
+const GOALS={rh:100,td:5,mdl:5,dayRev:2000,moRh:3750,moTd:150,moMdl:150,moRev:60000};
 let ALL_DATA={};
 let revChart=null,histChart=null;
 
@@ -357,7 +347,6 @@ function getRolling30(){
   return recent.length?recent:collect(null).slice(-30);
 }
 function getRolling30ExcludeToday(){
-  // Exclude today using explicit Y/M/D comparison to avoid timezone issues
   const now=new Date();
   const ty=now.getFullYear(),tm=now.getMonth()+1,td=now.getDate();
   return getRolling30().filter(d=>

@@ -38,15 +38,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .sec-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.13em;color:var(--text3);font-weight:600}
 .sec-note{font-size:.65rem;color:var(--text3)}
 
-.rev-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
-.rev-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.rev-title{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3)}
-.rev-goal{font-size:.65rem;color:var(--text3)}
-.rev-rail{position:relative;height:28px}
-.rev-bg{position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:10px;background:var(--border);border-radius:6px;overflow:hidden}
-.rev-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#f87171,#f5a623,#22c55e);transition:width .9s ease}
-.rev-badge{position:absolute;top:-22px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;transition:left .9s ease;max-width:160px}
-.rev-ends{display:flex;justify-content:space-between;margin-top:6px;font-size:.6rem;color:var(--text3)}
+.rev-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+.rev-hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.rev-hd-left{display:flex;flex-direction:column;gap:4px}
+.rev-title{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);font-weight:600}
+.rev-achieved{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+.rev-hd-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.rev-goal-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.rev-goal-val{font-size:1rem;font-weight:700;color:var(--text2)}
+.rev-pct-pill{font-size:.72rem;font-weight:700;border-radius:20px;padding:3px 10px;border:1px solid;white-space:nowrap}
+.rev-track{position:relative;height:14px;background:var(--border);border-radius:8px;overflow:visible}
+.rev-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#f87171,#f5a623,#22c55e);transition:width .9s ease}
+.rev-ends{display:flex;justify-content:space-between;margin-top:7px;font-size:.6rem;color:var(--text3)}
 
 .summary-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .scard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;min-width:0}
@@ -239,14 +242,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
     <div class="rev-wrap">
       <div class="rev-hd">
-        <span class="rev-title">Revenue vs Daily Goal</span>
-        <span class="rev-goal">Goal <strong style="color:var(--text2)">$2,000</strong></span>
+        <div class="rev-hd-left">
+          <span class="rev-title">Daily Revenue</span>
+          <span class="rev-achieved" id="t-rev-amt" style="color:var(--rev)">$0</span>
+        </div>
+        <div class="rev-hd-right">
+          <span class="rev-goal-label">Daily Goal</span>
+          <span class="rev-goal-val">$2,000</span>
+          <span class="rev-pct-pill" id="t-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
+        </div>
       </div>
-      <div class="rev-rail" style="margin-right:110px">
-        <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
-        <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
+      <div class="rev-track">
+        <div class="rev-fill" id="t-rev-fill" style="width:0%"></div>
       </div>
-      <div class="rev-ends" style="margin-right:110px"><span>$0</span><span>$2,000</span></div>
+      <div class="rev-ends"><span>$0</span><span>$2,000</span></div>
     </div>
   </div>
 
@@ -287,14 +296,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
     <div class="rev-wrap">
       <div class="rev-hd">
-        <span class="rev-title">30-Day Total vs Goal</span>
-        <span class="rev-goal">Goal <strong style="color:var(--text2)">$60,000</strong></span>
+        <div class="rev-hd-left">
+          <span class="rev-title">Rolling 30-Day Revenue</span>
+          <span class="rev-achieved" id="g-rev-amt" style="color:var(--rev)">$0</span>
+        </div>
+        <div class="rev-hd-right">
+          <span class="rev-goal-label">30-Day Goal</span>
+          <span class="rev-goal-val">$60,000</span>
+          <span class="rev-pct-pill" id="g-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
+        </div>
       </div>
-      <div class="rev-rail" style="margin-right:110px">
-        <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
-        <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
+      <div class="rev-track">
+        <div class="rev-fill" id="g-rev-fill" style="width:0%"></div>
       </div>
-      <div class="rev-ends" style="margin-right:110px"><span>$0</span><span>$60,000</span></div>
+      <div class="rev-ends"><span>$0</span><span>$60,000</span></div>
     </div>
   </div>
 
@@ -643,9 +658,12 @@ function updateToday() {
   const dayRev = (info.rhRev||0) + (info.tdRev||0) + (info.mdlRev||0);
   const rp = Math.min(Math.round(dayRev / GOALS.dayRev * 100), 100);
   const rc = rp >= 100 ? '#22c55e' : rp >= 75 ? '#f5a623' : '#f87171';
-  st('t-rev-fill', 'width', rp + '%');
-  const rb = document.getElementById('t-rev-badge');
-  if (rb) { rb.style.left = Math.max(rp, 3) + '%'; rb.style.color = rc; rb.style.borderColor = rc; rb.textContent = '$' + Math.round(dayRev).toLocaleString() + ' · ' + rp + '%'; }
+  st('t-rev-fill', 'width', Math.min(rp, 100) + '%');
+  const tAmt = document.getElementById('t-rev-amt');
+  const tPct = document.getElementById('t-rev-pct');
+  if (tAmt) { tAmt.textContent = '$' + Math.round(dayRev).toLocaleString(); tAmt.style.color = rc; }
+  if (tPct) { tPct.textContent = rp + '%'; tPct.style.color = rc; tPct.style.borderColor = rc;
+    tPct.style.background = rp >= 100 ? 'rgba(34,197,94,.12)' : rp >= 75 ? 'rgba(245,166,35,.1)' : 'rgba(248,113,113,.1)'; }
 
   // Today vs target pills
   function fill(k, val, target, color) {
@@ -670,9 +688,12 @@ function updateGoals() {
   set('goals-note', 'last ' + days.length + ' days (excl. today)');
   const mp = Math.min(Math.round(tRev / GOALS.moRev * 100), 100);
   const mc = mp >= 100 ? '#22c55e' : mp >= 75 ? '#f5a623' : '#f87171';
-  st('g-rev-fill', 'width', mp + '%');
-  const gb = document.getElementById('g-rev-badge');
-  if (gb) { gb.style.left = Math.max(mp, 3) + '%'; gb.style.color = mc; gb.style.borderColor = mc; gb.textContent = '$' + Math.round(tRev).toLocaleString() + ' · ' + mp + '%'; }
+  st('g-rev-fill', 'width', Math.min(mp, 100) + '%');
+  const gAmt = document.getElementById('g-rev-amt');
+  const gPct = document.getElementById('g-rev-pct');
+  if (gAmt) { gAmt.textContent = '$' + Math.round(tRev).toLocaleString(); gAmt.style.color = mc; }
+  if (gPct) { gPct.textContent = mp + '%'; gPct.style.color = mc; gPct.style.borderColor = mc;
+    gPct.style.background = mp >= 100 ? 'rgba(34,197,94,.12)' : mp >= 75 ? 'rgba(245,166,35,.1)' : 'rgba(248,113,113,.1)'; }
 }
 
 function updateSummary() {

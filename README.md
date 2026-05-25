@@ -82,7 +82,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   align-items:center;justify-content:center;
   cursor:default;transition:transform .15s,box-shadow .15s;
   position:relative;padding:6px 4px;
-  min-height:72px;
+  min-height:82px;
 }
 .hm-cell:hover{transform:scale(1.05);box-shadow:0 0 0 1.5px rgba(255,255,255,.25);z-index:2}
 .hm-cell.today{box-shadow:0 0 0 2.5px #22c55e!important}
@@ -318,25 +318,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <div>
     <div class="sec-hd">
       <span class="sec-label" id="heatmap-label">Encounter Heatmap — Current Month</span>
-      <span class="sec-note">Target met (RH ≥ 167 · $2,000+/day) shown in green with full detail</span>
+      <span class="sec-note">green ≥$2k · orange $1.5k–$2k · red &lt;$1.5k &nbsp;·&nbsp; ⬤ Roman &nbsp;■ Teladoc &nbsp;◆ MDLive</span>
     </div>
     <div class="chart-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3 id="heatmap-title" style="margin:0">—</h3>
         <!-- color legend -->
         <div style="display:flex;align-items:center;gap:8px;font-size:.62rem;color:var(--text3)">
-          <span>Below target →</span>
+          <span>← Below $1,500</span>
           <div style="display:flex;gap:3px;align-items:center">
-            <div title="Very low" style="width:16px;height:16px;border-radius:3px;background:#450a0a;border:1px solid rgba(255,255,255,.06)"></div>
-            <div title="Low" style="width:16px;height:16px;border-radius:3px;background:#991b1b;border:1px solid rgba(255,255,255,.06)"></div>
-            <div title="Mid" style="width:16px;height:16px;border-radius:3px;background:#c2410c;border:1px solid rgba(255,255,255,.06)"></div>
-            <div title="Getting close" style="width:16px;height:16px;border-radius:3px;background:#ea580c;border:1px solid rgba(255,255,255,.06)"></div>
-            <div title="Amber" style="width:16px;height:16px;border-radius:3px;background:#d97706;border:1px solid rgba(255,255,255,.06)"></div>
-            <div title="Near target" style="width:16px;height:16px;border-radius:3px;background:#a16207;border:1px solid rgba(255,255,255,.06)"></div>
+            <div title="Below $500" style="width:16px;height:16px;border-radius:3px;background:#450a0a;border:1px solid rgba(255,255,255,.06)"></div>
+            <div title="$500–$999" style="width:16px;height:16px;border-radius:3px;background:#991b1b;border:1px solid rgba(255,255,255,.06)"></div>
+            <div title="$1,000–$1,499" style="width:16px;height:16px;border-radius:3px;background:#dc2626;border:1px solid rgba(255,255,255,.06)"></div>
             <div style="width:1px;height:16px;background:rgba(255,255,255,.15);margin:0 2px"></div>
-            <div title="Target met (RH ≥ 167)" style="width:16px;height:16px;border-radius:3px;background:#22c55e;border:1px solid rgba(255,255,255,.06)"></div>
+            <div title="$1,500–$1,999" style="width:16px;height:16px;border-radius:3px;background:#ea580c;border:1px solid rgba(255,255,255,.06)"></div>
+            <div style="width:1px;height:16px;background:rgba(255,255,255,.15);margin:0 2px"></div>
+            <div title="$2,000+ goal met" style="width:16px;height:16px;border-radius:3px;background:#22c55e;border:1px solid rgba(255,255,255,.06)"></div>
           </div>
-          <span>✓ Target</span>
+          <span>✓ $2,000+</span>
         </div>
       </div>
 
@@ -993,23 +992,17 @@ function updateHistChart() {
 // Color scale based on % of RH target (167).
 // Below target: red → orange → amber → yellow (traffic light approach).
 // At/over target: graduated greens, brighter = further over.
-function encToColor(rh) {
-  if (rh === 0) return { bg:'#0d1117', textDark:false };
-
-  const pct = rh / 167; // % of target
-
-  // ── AT OR OVER TARGET — single bright green ─────────────────────────────
-  if (pct >= 1.0) return { bg:'#22c55e', textDark:false };
-
-  // ── BELOW TARGET — red → orange → amber → yellow ─────────────────────────
-  if (pct < 0.15) return { bg:'#450a0a', textDark:false }; // 0–15%   deep red
-  if (pct < 0.30) return { bg:'#7f1d1d', textDark:false }; // 15–30%  dark red
-  if (pct < 0.45) return { bg:'#991b1b', textDark:false }; // 30–45%  red
-  if (pct < 0.58) return { bg:'#c2410c', textDark:false }; // 45–58%  red-orange
-  if (pct < 0.70) return { bg:'#ea580c', textDark:true  }; // 58–70%  orange
-  if (pct < 0.82) return { bg:'#d97706', textDark:true  }; // 70–82%  amber
-  if (pct < 0.92) return { bg:'#ca8a04', textDark:true  }; // 82–92%  golden
-  return                 { bg:'#a16207', textDark:true  };  // 92–99%  dark gold (so close!)
+function encToColor(rev) {
+  if (rev === 0) return { bg:'#0d1117', textDark:false };
+  if (rev >= 2000) return { bg:'#22c55e', textDark:false };   // ≥$2,000 — green
+  if (rev >= 1500) return { bg:'#ea580c', textDark:false };   // $1,500–$1,999 — orange
+  // Below $1,500 — red gradient
+  const pct = rev / 1500;
+  if (pct < 0.20) return { bg:'#450a0a', textDark:false };
+  if (pct < 0.40) return { bg:'#7f1d1d', textDark:false };
+  if (pct < 0.60) return { bg:'#991b1b', textDark:false };
+  if (pct < 0.80) return { bg:'#b91c1c', textDark:false };
+  return                 { bg:'#dc2626', textDark:false };
 }
 
 function updateHeatmap() {
@@ -1061,10 +1054,10 @@ function updateHeatmap() {
     const data     = dayMap[day];
     const isToday  = todayM === cur.month && todayY === cur.year && todayD === day;
     const isFuture = !data && new Date(cur.year, cur.month-1, day) > now;
-    const targetMet = data && data.rh >= GOALS.rh;  // 167
+    const targetMet = data && data.rev >= 2000;
 
     const { bg, textDark } = data
-      ? encToColor(data.rh)
+      ? encToColor(data.rev)
       : { bg: isFuture ? '#0d1117' : '#111827', textDark: false };
 
     const cell = document.createElement('div');
@@ -1080,32 +1073,67 @@ function updateHeatmap() {
     const encCol = textDark ? '#000' : '#fff';
 
     if (data) {
+      const revStatus = data.rev >= 2000
+        ? `<span style="color:#22c55e">✓ $${(data.rev-2000).toLocaleString()} over $2k goal</span>`
+        : data.rev >= 1500
+          ? `<span style="color:#f5a623">$${(2000-data.rev).toLocaleString()} short of $2k goal</span>`
+          : `<span style="color:#f87171">$${(2000-data.rev).toLocaleString()} below $2k goal</span>`;
       const tip = `<div class="hm-tip">
         <strong style="color:var(--text)">${moShort[cur.month-1]} ${day}${isToday ? ' · Today' : ''}</strong><br>
-        <span style="color:#2dd4a0">RH ${data.rh}</span> &nbsp;·&nbsp;
-        <span style="color:#7b9ef0">TD ${data.td}</span> &nbsp;·&nbsp;
-        <span style="color:#f5a623">MDL ${data.mdl}</span><br>
-        Total: <strong>${data.enc}</strong> &nbsp;·&nbsp; $${data.rev.toLocaleString()}
-        ${targetMet ? '<br><span style="color:#22c55e">✓ Daily target met (RH ≥ 167)</span>' : ''}
+        <span style="color:#2dd4a0">Roman Health: ${data.rh}</span><br>
+        <span style="color:#7b9ef0">Teladoc: ${data.td}</span><br>
+        <span style="color:#f5a623">MDLive: ${data.mdl}</span><br>
+        <strong style="color:var(--text)">Total: ${data.enc} encounters</strong><br>
+        <strong style="color:var(--text)">Revenue: $${data.rev.toLocaleString()}</strong><br>
+        ${revStatus}
       </div>`;
 
-      if (targetMet) {
-        const over    = data.rh - 167;
-        const overPct = Math.round(over / 167 * 100);
-        const tdmdl   = (data.td||0) + (data.mdl||0);
-        cell.innerHTML = `${tip}
-          <div class="hm-day" style="color:${dayCol}">${day}</div>
-          <div class="hm-enc" style="color:${encCol}">${data.rh}</div>
-          <div class="hm-check">+${over} <span style="opacity:.7;font-size:.55rem">(+${overPct}%)</span></div>
-          ${tdmdl > 0 ? `<div style="font-size:.58rem;color:rgba(0,0,0,.45);margin-top:1px">+${tdmdl} TD/MDL</div>` : ''}
-          <div class="hm-rev">$${data.rev.toLocaleString()}</div>`;
+      // Rich cell content for all data days
+      const totalEnc = data.enc;
+      const isGreen  = data.rev >= 2000;
+      const isOrange = data.rev >= 1500 && data.rev < 2000;
+      const tc       = 'rgba(255,255,255,';
+      const dc       = 'rgba(0,0,0,';
+      const base     = textDark ? dc : tc;
+
+      // Status line
+      let statusLine = '';
+      if (isGreen) {
+        const overRev = data.rev - 2000;
+        statusLine = `<div style="font-size:.6rem;font-weight:700;color:${textDark?dc+'0.6)':tc+'0.85)'};margin-top:1px">✓ +$${overRev.toLocaleString()}</div>`;
+      } else if (isOrange) {
+        const needed = 2000 - data.rev;
+        statusLine = `<div style="font-size:.58rem;color:${tc+'0.7)'};margin-top:1px">$${needed.toLocaleString()} to goal</div>`;
       } else {
-        const tdmdl = (data.td||0) + (data.mdl||0);
-        cell.innerHTML = `${tip}
-          <div class="hm-day" style="color:${dayCol}">${day}</div>
-          <div class="hm-enc" style="color:${encCol}">${data.rh}</div>
-          ${tdmdl > 0 ? `<div style="font-size:.58rem;color:${textDark?'rgba(0,0,0,.45)':'rgba(255,255,255,.35)'};margin-top:1px">+${tdmdl} TD/MDL</div>` : ''}`;
+        const needed = 2000 - data.rev;
+        statusLine = `<div style="font-size:.58rem;color:${tc+'0.6)'};margin-top:1px">$${needed.toLocaleString()} to goal</div>`;
       }
+
+      // Shape icons: circle=RH, square=TD, diamond=MDL
+      // White shapes with dark number inside — readable on any background
+      const mkShape = (val, shape) => {
+        if (!val) return '';
+        const styles = {
+          circle:  'width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;font-size:.52rem;font-weight:800;color:#1a1a1a;flex-shrink:0',
+          square:  'width:18px;height:18px;border-radius:3px;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;font-size:.52rem;font-weight:800;color:#1a1a1a;flex-shrink:0',
+          diamond: 'width:18px;height:18px;border-radius:2px;transform:rotate(45deg);background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0',
+        };
+        if (shape === 'diamond') {
+          return `<div style="${styles.diamond}"><span style="transform:rotate(-45deg);font-size:.52rem;font-weight:800;color:#1a1a1a;display:block">${val}</span></div>`;
+        }
+        return `<div style="${styles[shape]}">${val}</div>`;
+      };
+
+      cell.innerHTML = `${tip}
+        <div class="hm-day" style="color:${base+'0.45)'};">${day}</div>
+        <div class="hm-enc" style="color:${encCol}">${totalEnc}</div>
+        <div style="display:flex;gap:3px;margin-top:3px;justify-content:center;align-items:center">
+          ${mkShape(data.rh,  'circle')}
+          ${mkShape(data.td,  'square')}
+          ${mkShape(data.mdl, 'diamond')}
+        </div>
+        ${statusLine}
+        <div class="hm-rev" style="color:${base+'0.65)'}">$${data.rev.toLocaleString()}</div>`;
     } else if (isFuture) {
       // Future day — dashed outline, day number only, clearly not-yet
       cell.innerHTML = `<div class="hm-day">${day}</div>`;

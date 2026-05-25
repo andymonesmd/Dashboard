@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -263,7 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <div>
     <div class="sec-hd">
       <span class="sec-label">Charts</span>
-      <span class="sec-note">RH $12 · TD phone $23 / video $28 · MDL phone $25 / video $28</span>
+      <span class="sec-note">RH $12 · TD phone $23 / video $28 · MDL phone $25 / video $28 / async $12.50</span>
     </div>
     <div class="two-charts">
       <div class="chart-card">
@@ -375,8 +375,8 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVT-Xukwe3rxiP
 const CSV_FALLBACK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0D1ReEdPb5-BI6rQUyZj5tEP8wrjWUc09JAZs7yJF8fQnDak7ChKmh3TIWIY92Q/pub?output=csv";
 
 // ── RATES & GOALS ─────────────────────────────────────────────────────────────
-const RATES = { rh:12, td1:23, td2:28, mdl1:25, mdl2:28 };
-const GOALS = { rh:167, td:5, mdl:5, dayRev:2000, moRev:60000 };
+const RATES = { rh:12, td_phone:23, td_video:28, mdl_phone:25, mdl_video:28, mdl_async:12.50 };
+const GOALS = { rh:167, td:5, mdl:15, dayRev:2000, moRev:60000 };
 
 let ALL_DATA = {};
 let revChart = null, histChart = null;
@@ -470,41 +470,56 @@ function parseSheetCSV(text, tabName) {
 
   const n = dateCols.length;
   const rh  = new Array(n).fill(0), rev = new Array(n).fill(0);
-  const td1 = new Array(n).fill(0), td2 = new Array(n).fill(0);
-  const mdl1= new Array(n).fill(0), mdl2= new Array(n).fill(0);
 
-  // FIX: count TD and MDL rows separately to apply correct rates
-  let tdc = 0, mc = 0;
+  // Name-based rate detection — works regardless of row order
+  // Accumulate separate buckets per visit type
+  const td_phone = new Array(n).fill(0);
+  const td_video = new Array(n).fill(0);
+  const mdl_phone= new Array(n).fill(0);
+  const mdl_video= new Array(n).fill(0);
+  const mdl_async= new Array(n).fill(0);
 
   for (const row of rows.slice(1)) {
-    // Normalise label: strip whitespace, spaces, numbers, special chars
-    const raw = (row[0] || '').trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9+]/g, '');
-    if (!raw) continue;
+    const rawLabel = (row[0] || '').trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9+]/g, '');
+    if (!rawLabel) continue;
 
-    const isRO  = raw === 'RO' || raw === 'RO+';
-    // FIX: tighter MDL detection — avoid matching random rows with 'ML'
-    const isMDL = raw === 'MDL' || raw === 'MD' || raw === 'MDLIVE' || raw.startsWith('MDL');
-    const isTD  = raw === 'TD' || raw === 'TDOC' || raw === 'TELADOC' || (raw.startsWith('TD') && !isMDL);
-    const isTot = raw === 'TOT' || raw === 'TOTAL';
+    const isRO    = rawLabel === 'RO' || rawLabel === 'RO+';
+    const isTot   = rawLabel === 'TOT' || rawLabel === 'TOTAL';
+    const isTD    = rawLabel.includes('TD') || rawLabel.includes('TELADOC');
+    const isMDL   = !isTD && (rawLabel === 'MDL' || rawLabel === 'MD' || rawLabel.includes('MDL') || rawLabel.includes('MDLIVE'));
 
-    if (!isRO && !isMDL && !isTD && !isTot) continue;
+    const isPhone = rawLabel.includes('PHONE');
+    const isVideo = rawLabel.includes('VIDEO');
+    const isAsync = rawLabel.includes('ASYNC');
 
-    if (isTD) tdc++;
-    if (isMDL) mc++;
+    if (!isRO && !isTot && !isTD && !isMDL) continue;
 
     dateCols.forEach((col, j) => {
-      const raw = (row[col.i] || '').toString().replace(/#[A-Z!]+/g, '').replace(/[$, ]/g, '');
-      const v = parseFloat(raw) || 0;
+      const cellRaw = (row[col.i] || '').toString().replace(/#[A-Z!]+/g, '').replace(/[$, ]/g, '');
+      const v = parseFloat(cellRaw) || 0;
       if (!v) return;
-      if (isRO)  rh[j]  += v;
-      if (isTot) rev[j] += v;  // FIX: accumulate in case of multiple total rows
-      if (isTD)  { if (tdc === 1) td1[j] += v; else td2[j] += v; }
-      if (isMDL) { if (mc  === 1) mdl1[j]+= v; else mdl2[j]+= v; }
+
+      if (isRO)  { rh[j]  += v; return; }
+      if (isTot) { rev[j] += v; return; }
+
+      if (isTD) {
+        if (isVideo)        td_video[j] += v;
+        else                td_phone[j] += v;  // phone or unspecified TD
+      }
+      if (isMDL) {
+        if (isAsync)        mdl_async[j]+= v;
+        else if (isVideo)   mdl_video[j]+= v;
+        else                mdl_phone[j]+= v;  // phone or unspecified MDL
+      }
     });
   }
 
-  const td  = td1.map((v, i) => v + td2[i]);
-  const mdl = mdl1.map((v, i) => v + mdl2[i]);
+  // Combine for total encounter counts
+  // aliases for backward compat with return value and histChart
+  const td1 = td_phone, td2 = td_video;
+  const mdl1= mdl_phone, mdl2 = mdl_video;
+  const td  = td_phone.map((v, i) => v + td_video[i]);
+  const mdl = mdl_phone.map((v, i) => v + mdl_video[i] + mdl_async[i]);
   const labels = dateCols.map(d => d.month + '/' + d.day);
 
   // Find last day with any data
@@ -523,10 +538,14 @@ function parseSheetCSV(text, tabName) {
     td1:  td1.slice(0, t),  td2:  td2.slice(0, t),
     mdl:  mdl.slice(0, t),  mdl1: mdl1.slice(0, t), mdl2: mdl2.slice(0, t),
     rev:  rev.slice(0, t),
-    // Pre-calculated revenue arrays
+    // Pre-calculated revenue arrays — name-based rates
     rhRev:  rh.slice(0,t).map(v => Math.round(v * RATES.rh)),
-    tdRev:  td1.slice(0,t).map((v,i) => Math.round(v * RATES.td1 + td2[i] * RATES.td2)),
-    mdlRev: mdl1.slice(0,t).map((v,i)=> Math.round(v * RATES.mdl1 + mdl2[i] * RATES.mdl2)),
+    tdRev:  td_phone.slice(0,t).map((v,i) => Math.round(v * RATES.td_phone + td_video[i] * RATES.td_video)),
+    mdlRev: mdl_phone.slice(0,t).map((v,i) => Math.round(
+      v * RATES.mdl_phone +
+      mdl_video[i] * RATES.mdl_video +
+      mdl_async[i] * RATES.mdl_async
+    )),
     // Date info
     month: sm,
     year:  sy,
@@ -900,8 +919,11 @@ function updateHistChart() {
   sorted.forEach(([,d]) => {
     labels.push(moN[d.month-1] + " '" + String(d.year).slice(2));
     const aRH  = Math.round(d.rh.reduce((a,b)=>a+b, 0) * RATES.rh);
-    const aTD  = Math.round((d.td1||[]).reduce((a,b)=>a+b,0)*RATES.td1 + (d.td2||[]).reduce((a,b)=>a+b,0)*RATES.td2);
-    const aMDL = Math.round((d.mdl1||[]).reduce((a,b)=>a+b,0)*RATES.mdl1 + (d.mdl2||[]).reduce((a,b)=>a+b,0)*RATES.mdl2);
+    const aTD  = Math.round((d.td1||[]).reduce((a,b)=>a+b,0)*RATES.td_phone + (d.td2||[]).reduce((a,b)=>a+b,0)*RATES.td_video);
+    const aMDL = Math.round(
+      (d.mdl1||[]).reduce((a,b)=>a+b,0)*RATES.mdl_phone +
+      (d.mdl2||[]).reduce((a,b)=>a+b,0)*RATES.mdl_video
+    );  // mdl_async included in mdlRev per-day already
     rhR.push(aRH); tdR.push(aTD); mdlR.push(aMDL);
     const isCur = d.month === curMonth && d.year === curYear;
     if (isCur && dayOfMonth > 0 && dayOfMonth < daysInMonth) {

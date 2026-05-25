@@ -45,7 +45,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .rev-rail{position:relative;height:28px}
 .rev-bg{position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:10px;background:var(--border);border-radius:6px;overflow:hidden}
 .rev-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#f87171,#f5a623,#22c55e);transition:width .9s ease}
-.rev-badge{position:absolute;top:-22px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;transition:left .9s ease}
+.rev-badge{position:absolute;top:-22px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700;white-space:nowrap;transition:left .9s ease;max-width:160px}
 .rev-ends{display:flex;justify-content:space-between;margin-top:6px;font-size:.6rem;color:var(--text3)}
 
 .summary-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -242,11 +242,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         <span class="rev-title">Revenue vs Daily Goal</span>
         <span class="rev-goal">Goal <strong style="color:var(--text2)">$2,000</strong></span>
       </div>
-      <div class="rev-rail">
+      <div class="rev-rail" style="margin-right:110px">
         <div class="rev-bg"><div class="rev-fill" id="t-rev-fill"></div></div>
         <div class="rev-badge" id="t-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$2,000</span></div>
+      <div class="rev-ends" style="margin-right:110px"><span>$0</span><span>$2,000</span></div>
     </div>
   </div>
 
@@ -276,6 +276,25 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
           <div class="cleg" id="proj-legend" style="display:none"><div class="cleg-dot" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3)"></div>Projected</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 30-DAY ROLLING REVENUE GOAL -->
+  <div>
+    <div class="sec-hd">
+      <span class="sec-label">Rolling 30-Day Revenue vs Goal</span>
+      <span class="sec-note" id="goals-note">last 30 days</span>
+    </div>
+    <div class="rev-wrap">
+      <div class="rev-hd">
+        <span class="rev-title">30-Day Total vs Goal</span>
+        <span class="rev-goal">Goal <strong style="color:var(--text2)">$60,000</strong></span>
+      </div>
+      <div class="rev-rail" style="margin-right:110px">
+        <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
+        <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
+      </div>
+      <div class="rev-ends" style="margin-right:110px"><span>$0</span><span>$60,000</span></div>
     </div>
   </div>
 
@@ -321,24 +340,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
-  <!-- 30-DAY ROLLING REVENUE GOAL -->
-  <div>
-    <div class="sec-hd">
-      <span class="sec-label">Rolling 30-Day Revenue vs Goal</span>
-      <span class="sec-note" id="goals-note">last 30 days</span>
-    </div>
-    <div class="rev-wrap">
-      <div class="rev-hd">
-        <span class="rev-title">30-Day Total vs Goal</span>
-        <span class="rev-goal">Goal <strong style="color:var(--text2)">$60,000</strong></span>
-      </div>
-      <div class="rev-rail">
-        <div class="rev-bg"><div class="rev-fill" id="g-rev-fill"></div></div>
-        <div class="rev-badge" id="g-rev-badge" style="left:2%;color:var(--rev);border-color:var(--rev)">$0 · 0%</div>
-      </div>
-      <div class="rev-ends"><span>$0</span><span>$60,000</span></div>
-    </div>
-  </div>
+
 
 </div>
 

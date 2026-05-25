@@ -273,6 +273,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
           <div class="cleg"><div class="cleg-dot" style="background:#2dd4a0"></div>Roman Health</div>
           <div class="cleg"><div class="cleg-dot" style="background:#7b9ef0"></div>Teladoc</div>
           <div class="cleg"><div class="cleg-dot" style="background:#f5a623"></div>MDLive</div>
+          <div class="cleg"><div style="width:18px;height:2px;background:#f8fafc;border-radius:2px;border-top:2px dashed #f8fafc;margin-top:3px"></div>&nbsp;7-Day Avg</div>
         </div>
       </div>
       <div class="chart-card">
@@ -741,14 +742,41 @@ function updateCharts() {
   const labels = days.map(d => d.label);
 
   if (revChart) revChart.destroy();
+  // Compute 7-day moving average of total daily revenue
+  const totalRevPerDay = days.map(d => d.rhRev + d.tdRev + d.mdlRev);
+  const ma7 = totalRevPerDay.map((_, i) => {
+    if (i < 6) return null; // not enough data yet
+    const slice = totalRevPerDay.slice(i - 6, i + 1);
+    const avg = slice.reduce((a, b) => a + b, 0) / 7;
+    // null out if today is early (same nullLast logic)
+    return (i === lastI && early) ? null : Math.round(avg);
+  });
+
   revChart = new Chart(document.getElementById('revChart').getContext('2d'), {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label:'Roman Health', data: days.map((d,i) => nullLast(d.rhRev,  i)), backgroundColor:'rgba(45,212,160,.8)',  borderWidth:0, borderRadius:2, stack:'s' },
-        { label:'Teladoc',      data: days.map((d,i) => nullLast(d.tdRev,  i)), backgroundColor:'rgba(123,158,240,.8)', borderWidth:0, borderRadius:0, stack:'s' },
-        { label:'MDLive',       data: days.map((d,i) => nullLast(d.mdlRev, i)), backgroundColor:'rgba(245,166,35,.8)',  borderWidth:0, borderRadius:0, stack:'s' },
+        { label:'Roman Health', data: days.map((d,i) => nullLast(d.rhRev,  i)), backgroundColor:'rgba(45,212,160,.8)',  borderWidth:0, borderRadius:2, stack:'s', order:2 },
+        { label:'Teladoc',      data: days.map((d,i) => nullLast(d.tdRev,  i)), backgroundColor:'rgba(123,158,240,.8)', borderWidth:0, borderRadius:0, stack:'s', order:2 },
+        { label:'MDLive',       data: days.map((d,i) => nullLast(d.mdlRev, i)), backgroundColor:'rgba(245,166,35,.8)',  borderWidth:0, borderRadius:0, stack:'s', order:2 },
+        {
+          label: '7-Day Avg',
+          data: ma7,
+          type: 'line',
+          borderColor: '#f8fafc',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 3],
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#f8fafc',
+          tension: 0.4,
+          spanGaps: false,
+          stack: undefined,
+          order: 1,
+          yAxisID: 'y',
+        },
       ]
     },
     options: {
@@ -757,8 +785,15 @@ function updateCharts() {
       plugins:{
         legend:{ display:false },
         tooltip:{ ...TT, callbacks:{
-          label: i => i.raw ? ' ' + i.dataset.label + ': $' + (i.raw).toLocaleString() : null,
-          footer: items => 'Total: $' + items.reduce((a,i) => a+(i.raw||0), 0).toLocaleString()
+          label: i => {
+            if (i.dataset.label === '7-Day Avg')
+              return i.raw != null ? ' 7-Day Avg: $' + i.raw.toLocaleString() : null;
+            return i.raw ? ' ' + i.dataset.label + ': $' + (i.raw).toLocaleString() : null;
+          },
+          footer: items => {
+            const barTotal = items.filter(i => i.dataset.label !== '7-Day Avg').reduce((a,i) => a+(i.raw||0), 0);
+            return barTotal ? 'Day Total: $' + barTotal.toLocaleString() : '';
+          }
         }}
       },
       scales:{

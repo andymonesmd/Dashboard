@@ -273,7 +273,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
           <div class="cleg"><div class="cleg-dot" style="background:#2dd4a0"></div>Roman Health</div>
           <div class="cleg"><div class="cleg-dot" style="background:#7b9ef0"></div>Teladoc</div>
           <div class="cleg"><div class="cleg-dot" style="background:#f5a623"></div>MDLive</div>
-          <div class="cleg"><div style="width:18px;height:2px;background:#f8fafc;border-radius:2px;border-top:2px dashed #f8fafc;margin-top:3px"></div>&nbsp;7-Day Avg</div>
+          <div class="cleg"><div style="width:18px;height:2px;background:#fbbf24;border-radius:2px;border-top:2px dashed #fbbf24;margin-top:3px"></div>&nbsp;7-Day Avg</div>
         </div>
       </div>
       <div class="chart-card">
@@ -546,6 +546,42 @@ function getDayDate(sheet, idx) {
   return new Date(sheet.year, +p[0] - 1, +p[1]);
 }
 
+function getRollingN(n, excludeToday) {
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - n); cutoff.setHours(0, 0, 0, 0);
+  const all = [];
+  Object.values(ALL_DATA).forEach(d => {
+    d.labels.forEach((label, i) => {
+      const date = getDayDate(d, i);
+      if (date < cutoff) return;
+      const dateStr = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      if (excludeToday && dateStr === todayStr) return;
+      all.push({
+        date, label,
+        rh: d.rh[i]||0, td: d.td[i]||0, mdl: d.mdl[i]||0,
+        rhRev: (d.rhRev||[])[i]||0, tdRev: (d.tdRev||[])[i]||0, mdlRev: (d.mdlRev||[])[i]||0,
+      });
+    });
+  });
+  all.sort((a, b) => a.date - b.date);
+  if (all.length < 5) {
+    const fallback = [];
+    Object.values(ALL_DATA).forEach(d => {
+      d.labels.forEach((label, i) => {
+        fallback.push({
+          date: getDayDate(d, i), label,
+          rh: d.rh[i]||0, td: d.td[i]||0, mdl: d.mdl[i]||0,
+          rhRev: (d.rhRev||[])[i]||0, tdRev: (d.tdRev||[])[i]||0, mdlRev: (d.mdlRev||[])[i]||0,
+        });
+      });
+    });
+    fallback.sort((a, b) => a.date - b.date);
+    return fallback.slice(-n);
+  }
+  return all;
+}
+
 function getRolling30(excludeToday) {
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
@@ -742,63 +778,107 @@ function updateCharts() {
   const labels = days.map(d => d.label);
 
   if (revChart) revChart.destroy();
-  // Compute 7-day moving average of total daily revenue
-  const totalRevPerDay = days.map(d => d.rhRev + d.tdRev + d.mdlRev);
-  const ma7 = totalRevPerDay.map((_, i) => {
-    if (i < 6) return null; // not enough data yet
-    const slice = totalRevPerDay.slice(i - 6, i + 1);
-    const avg = slice.reduce((a, b) => a + b, 0) / 7;
-    // null out if today is early (same nullLast logic)
-    return (i === lastI && early) ? null : Math.round(avg);
+  // Fetch 37 days so we have 7 days of lookback for the full 30-day MA
+  const extDays = getRollingN(37, false);
+  const extRev  = extDays.map(d => d.rhRev + d.tdRev + d.mdlRev);
+
+  // Compute MA7 across all 37 days, then slice to align with the 30-day display
+  const ma7full = extRev.map((_, i) => {
+    if (i < 6) return null;
+    const slice = extRev.slice(i - 6, i + 1);
+    return Math.round(slice.reduce((a, b) => a + b, 0) / 7);
   });
+  // Align: take last `days.length` entries from ma7full
+  const ma7raw = ma7full.slice(ma7full.length - days.length);
+  const ma7 = ma7raw.map((v, i) => (i === lastI && early) ? null : v);
 
   revChart = new Chart(document.getElementById('revChart').getContext('2d'), {
-    type: 'bar',
+    type: 'line',
     data: {
       labels,
       datasets: [
-        { label:'Roman Health', data: days.map((d,i) => nullLast(d.rhRev,  i)), backgroundColor:'rgba(45,212,160,.8)',  borderWidth:0, borderRadius:2, stack:'s', order:2 },
-        { label:'Teladoc',      data: days.map((d,i) => nullLast(d.tdRev,  i)), backgroundColor:'rgba(123,158,240,.8)', borderWidth:0, borderRadius:0, stack:'s', order:2 },
-        { label:'MDLive',       data: days.map((d,i) => nullLast(d.mdlRev, i)), backgroundColor:'rgba(245,166,35,.8)',  borderWidth:0, borderRadius:0, stack:'s', order:2 },
+        {
+          label: 'Roman Health',
+          data: days.map((d,i) => nullLast(d.rhRev, i)),
+          borderColor: '#2dd4a0',
+          backgroundColor: 'rgba(45,212,160,.12)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#2dd4a0',
+          spanGaps: false,
+          order: 2,
+        },
+        {
+          label: 'Teladoc',
+          data: days.map((d,i) => nullLast(d.tdRev, i)),
+          borderColor: '#7b9ef0',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#7b9ef0',
+          spanGaps: false,
+          order: 2,
+        },
+        {
+          label: 'MDLive',
+          data: days.map((d,i) => nullLast(d.mdlRev, i)),
+          borderColor: '#f5a623',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#f5a623',
+          spanGaps: false,
+          order: 2,
+        },
         {
           label: '7-Day Avg',
           data: ma7,
-          type: 'line',
-          borderColor: '#f8fafc',
+          borderColor: '#fbbf24',
           backgroundColor: 'transparent',
-          borderWidth: 2,
-          borderDash: [5, 3],
+          fill: false,
+          borderWidth: 2.5,
+          borderDash: [6, 3],
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#f8fafc',
+          pointHoverBackgroundColor: '#fbbf24',
           tension: 0.4,
           spanGaps: false,
-          stack: undefined,
           order: 1,
-          yAxisID: 'y',
         },
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{ display:false },
-        tooltip:{ ...TT, callbacks:{
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display:false },
+        tooltip: { ...TT, callbacks: {
           label: i => {
+            if (!i.raw && i.raw !== 0) return null;
             if (i.dataset.label === '7-Day Avg')
-              return i.raw != null ? ' 7-Day Avg: $' + i.raw.toLocaleString() : null;
-            return i.raw ? ' ' + i.dataset.label + ': $' + (i.raw).toLocaleString() : null;
+              return ' 7-Day Avg: $' + i.raw.toLocaleString();
+            return ' ' + i.dataset.label + ': $' + i.raw.toLocaleString();
           },
           footer: items => {
-            const barTotal = items.filter(i => i.dataset.label !== '7-Day Avg').reduce((a,i) => a+(i.raw||0), 0);
-            return barTotal ? 'Day Total: $' + barTotal.toLocaleString() : '';
+            const tot = items
+              .filter(i => i.dataset.label !== '7-Day Avg')
+              .reduce((a,i) => a + (i.raw||0), 0);
+            return tot ? 'Day Total: $' + tot.toLocaleString() : '';
           }
         }}
       },
-      scales:{
-        x:{ stacked:true, grid:{color:GRID}, ticks:{maxRotation:45, autoSkip:true, maxTicksLimit:10} },
-        y:{ stacked:true, grid:{color:GRID}, beginAtZero:true, ticks:{callback: v => '$'+(v>=1000?Math.round(v/1000)+'k':v)} }
+      scales: {
+        x: { grid:{color:GRID}, ticks:{maxRotation:45, autoSkip:true, maxTicksLimit:10} },
+        y: { grid:{color:GRID}, beginAtZero:true, ticks:{callback: v => '$'+(v>=1000?Math.round(v/1000)+'k':v)} }
       }
     }
   });

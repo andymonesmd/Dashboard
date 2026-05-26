@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -102,7 +101,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 /* TARGET MET cell */
 .hm-cell.target-met{border-radius:8px}
 .hm-cell.target-met .hm-day{color:rgba(0,0,0,.5)!important}
-.hm-cell.target-met .hm-enc{font-size:clamp(1rem,1.6vw,1.4rem);font-weight:900;color:#000}
+.hm-cell.target-met .hm-enc{font-size:clamp(1rem,1.6vw,1.4rem);font-weight:800;color:#fff}
 .hm-cell.target-met .hm-check{font-size:clamp(.65rem,1vw,.82rem);font-weight:800;color:rgba(0,0,0,.72);margin-top:2px;line-height:1.2}
 .hm-cell.target-met .hm-rev{font-size:clamp(.58rem,.9vw,.72rem);color:rgba(0,0,0,.58);margin-top:2px;font-family:'JetBrains Mono',monospace}
 
@@ -178,24 +177,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <!-- SUMMARY STRIP -->
   <div>
     <div class="sec-hd"><span class="sec-label">Rolling 30 Days — At a Glance</span></div>
-    <div class="summary-strip">
+    <div class="summary-strip" style="grid-template-columns:1fr 1fr">
       <div class="scard">
-        <div class="scard-label">Avg Daily · Roman Health</div>
+        <div class="scard-label">Avg Daily Encounters</div>
         <div class="scard-val" id="s-avg">—</div>
         <div class="scard-sub" id="s-avg-prev" style="margin-top:4px">—</div>
-        <div class="scard-sub" id="s-avg-sub" style="margin-top:2px">encounters / day</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Total Encounters · 30 Days</div>
-        <div class="scard-val" id="s-enc">—</div>
-        <div class="scard-sub" id="s-enc-prev" style="margin-top:4px">—</div>
-        <div class="scard-sub" id="s-enc-sub" style="margin-top:2px">all platforms</div>
+        <div class="scard-sub" id="s-avg-sub" style="margin-top:2px">all platforms · per day</div>
       </div>
       <div class="scard">
         <div class="scard-label">Avg Daily Revenue</div>
         <div class="scard-val" id="s-rev">—</div>
         <div class="scard-sub" id="s-rev-prev" style="margin-top:4px">—</div>
-        <div class="scard-sub" id="s-rev-sub" style="margin-top:2px">last 30 days</div>
+        <div class="scard-sub" id="s-rev-sub" style="margin-top:2px">avg daily revenue</div>
       </div>
     </div>
   </div>
@@ -375,7 +368,7 @@ const CSV_FALLBACK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0D1R
 
 // ── RATES & GOALS ─────────────────────────────────────────────────────────────
 const RATES = { rh:12, td_phone:23, td_video:28, mdl_phone:25, mdl_video:28, mdl_async:12.50 };
-const GOALS = { rh:167, td:5, mdl:15, dayRev:2000, moRev:60000 };
+const GOALS = { rh:167, td:10, mdl:15, dayRev:2000, moRev:60000 };
 
 let ALL_DATA = {};
 let revChart = null, histChart = null;
@@ -484,8 +477,12 @@ function parseSheetCSV(text, tabName) {
 
     const isRO    = rawLabel === 'RO' || rawLabel === 'RO+';
     const isTot   = rawLabel === 'TOT' || rawLabel === 'TOTAL';
-    const isTD    = rawLabel.includes('TD') || rawLabel.includes('TELADOC');
-    const isMDL   = !isTD && (rawLabel === 'MDL' || rawLabel === 'MD' || rawLabel.includes('MDL') || rawLabel.includes('MDLIVE'));
+    // Match TD, TLD, TDOC, TELADOC, TELADOCPHONE, TELADOCVIDEO, TLDVIDEO etc.
+    const isTD    = rawLabel === 'TD' || rawLabel === 'TLD' ||
+                    rawLabel.startsWith('TD') || rawLabel.startsWith('TLD') ||
+                    rawLabel.includes('TELADOC');
+    const isMDL   = !isTD && (rawLabel === 'MDL' || rawLabel === 'MD' ||
+                    rawLabel.startsWith('MDL') || rawLabel.includes('MDLIVE'));
 
     const isPhone = rawLabel.includes('PHONE');
     const isVideo = rawLabel.includes('VIDEO');
@@ -768,22 +765,40 @@ function updateSummary() {
 
   function renderStat(elId, prevElId, subElId, val, prevVal, fmt, subText) {
     const up   = val > prevVal, same = val === prevVal;
-    const col  = up ? '#22c55e' : same ? 'var(--text2)' : '#f87171';
+    const trendCol = up ? '#22c55e' : same ? 'var(--text2)' : '#f87171';
     const arr  = up ? '↑' : same ? '→' : '↓';
     const diff = Math.abs(val - prevVal);
     const el = document.getElementById(elId);
-    if (el) { el.textContent = fmt(val); el.style.color = col; }
+    if (el) { el.textContent = fmt(val); }
     set(prevElId, arr + ' ' + fmt(prevVal) + ' prev · ' + arr + ' ' + fmt(diff) + (up?' more':same?'':' less'));
-    const pe = document.getElementById(prevElId); if (pe) pe.style.color = col;
+    const pe = document.getElementById(prevElId); if (pe) pe.style.color = trendCol;
     if (subElId && subText) set(subElId, subText);
+
+    // Color the parent scard tile based on goal thresholds
+    const card = el && el.closest('.scard');
+    if (card) {
+      const rawNum = typeof val === 'number' ? val : parseFloat(String(val).replace(/[$,]/g,''));
+      let tileBg, tileText;
+      if (elId === 's-avg') {
+        tileBg   = rawNum >= 167  ? 'rgba(34,197,94,.15)'  : 'rgba(234,88,12,.15)';
+        tileText = rawNum >= 167  ? '#22c55e'              : '#ea580c';
+      } else if (elId === 's-rev') {
+        tileBg   = rawNum >= 2000 ? 'rgba(34,197,94,.15)'  : 'rgba(234,88,12,.15)';
+        tileText = rawNum >= 2000 ? '#22c55e'              : '#ea580c';
+      }
+      if (tileBg) {
+        card.style.background   = tileBg;
+        card.style.borderColor  = tileText.replace(')', ',.4)').replace('rgb','rgba');
+        if (el) el.style.color  = tileText;
+      }
+    }
   }
 
   const fNum = v => Math.round(v).toLocaleString();
   const fDol = v => '$' + Math.round(v).toLocaleString();
 
-  renderStat('s-avg',  's-avg-prev',  's-avg-sub',  Math.round(tRH/n),  Math.round(pRH/pN),  fNum, 'encounters / day (Roman Health)');
-  renderStat('s-enc',  's-enc-prev',  null,          tEnc,               pEnc,                fNum);
-  set('s-enc-sub', 'RH ' + tRH.toLocaleString() + ' · TD ' + tTD + ' · MDL ' + tMDL);
+  renderStat('s-avg',  's-avg-prev',  's-avg-sub',  Math.round((tRH+tTD+tMDL)/n), Math.round((pRH+pEnc-pRH)/pN + pRH/pN), fNum, 'RH ' + Math.round(tRH/n) + ' · TD ' + Math.round(tTD/n) + ' · MDL ' + Math.round(tMDL/n));
+
   renderStat('s-rev',  's-rev-prev',  's-rev-sub',  Math.round(tRev/n), Math.round(pRev/pN), fDol, 'avg daily revenue');
 }
 
@@ -1070,7 +1085,7 @@ function updateHeatmap() {
     cell.style.background = bg;
 
     const dayCol = textDark ? 'rgba(0,0,0,.45)' : 'rgba(255,255,255,.38)';
-    const encCol = textDark ? '#000' : '#fff';
+    const encCol = '#fff';
 
     if (data) {
       const revStatus = data.rev >= 2000

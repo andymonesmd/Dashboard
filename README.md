@@ -182,13 +182,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         <div class="scard-label">Avg Daily Encounters</div>
         <div class="scard-val" id="s-avg">—</div>
         <div class="scard-sub" id="s-avg-prev" style="margin-top:4px">—</div>
-        <div class="scard-sub" id="s-avg-sub" style="margin-top:2px">all platforms · per day</div>
+        <div class="scard-sub" id="s-avg-sub" style="margin-top:2px">all platforms · 30-day avg</div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">
+          <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">7-Day Avg</div>
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <span id="s-avg-7d" style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em">—</span>
+            <span id="s-avg-7d-trend" style="font-size:.68rem;color:var(--text3)">—</span>
+          </div>
+          <div id="s-avg-7d-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px">—</div>
+        </div>
       </div>
       <div class="scard">
         <div class="scard-label">Avg Daily Revenue</div>
         <div class="scard-val" id="s-rev">—</div>
         <div class="scard-sub" id="s-rev-prev" style="margin-top:4px">—</div>
-        <div class="scard-sub" id="s-rev-sub" style="margin-top:2px">avg daily revenue</div>
+        <div class="scard-sub" id="s-rev-sub" style="margin-top:2px">30-day avg</div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">
+          <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">7-Day Avg</div>
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <span id="s-rev-7d" style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em">—</span>
+            <span id="s-rev-7d-trend" style="font-size:.68rem;color:var(--text3)">—</span>
+          </div>
+          <div id="s-rev-7d-sub" style="font-size:.62rem;color:var(--text3);margin-top:2px">—</div>
+        </div>
       </div>
     </div>
   </div>
@@ -800,6 +816,47 @@ function updateSummary() {
   renderStat('s-avg',  's-avg-prev',  's-avg-sub',  Math.round((tRH+tTD+tMDL)/n), Math.round((pRH+pEnc-pRH)/pN + pRH/pN), fNum, 'RH ' + Math.round(tRH/n) + ' · TD ' + Math.round(tTD/n) + ' · MDL ' + Math.round(tMDL/n));
 
   renderStat('s-rev',  's-rev-prev',  's-rev-sub',  Math.round(tRev/n), Math.round(pRev/pN), fDol, 'avg daily revenue');
+
+  // ── 7-day averages ────────────────────────────────────────────────────────
+  const last7  = getRollingN(7,  true);
+  const prev7  = getRollingN(14, true).slice(0, 7); // days 8–14 ago
+
+  if (last7.length) {
+    const n7   = last7.length;
+    const enc7 = Math.round(last7.reduce((a,d) => a+d.rh+d.td+d.mdl, 0) / n7);
+    const rev7 = Math.round(last7.reduce((a,d) => a+d.rhRev+d.tdRev+d.mdlRev, 0) / n7);
+    const pEnc7= prev7.length ? Math.round(prev7.reduce((a,d) => a+d.rh+d.td+d.mdl, 0) / prev7.length) : null;
+    const pRev7= prev7.length ? Math.round(prev7.reduce((a,d) => a+d.rhRev+d.tdRev+d.mdlRev, 0) / prev7.length) : null;
+
+    // Encounters 7-day
+    const encCol7 = enc7 >= 167 ? '#22c55e' : '#ea580c';
+    const e7el = document.getElementById('s-avg-7d');
+    if (e7el) { e7el.textContent = enc7.toLocaleString(); e7el.style.color = encCol7; }
+    if (pEnc7 !== null) {
+      const diff = enc7 - pEnc7;
+      const arr  = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+      const tc   = diff > 0 ? '#22c55e' : diff < 0 ? '#f87171' : 'var(--text3)';
+      const t7el = document.getElementById('s-avg-7d-trend');
+      if (t7el) { t7el.textContent = arr + ' ' + Math.abs(diff) + ' vs prev 7d'; t7el.style.color = tc; }
+    }
+    const rh7  = Math.round(last7.reduce((a,d) => a+d.rh,  0) / n7);
+    const td7  = Math.round(last7.reduce((a,d) => a+d.td,  0) / n7);
+    const mdl7 = Math.round(last7.reduce((a,d) => a+d.mdl, 0) / n7);
+    set('s-avg-7d-sub', 'RH ~' + rh7 + ' · TD ~' + td7 + ' · MDL ~' + mdl7);
+
+    // Revenue 7-day
+    const revCol7 = rev7 >= 2000 ? '#22c55e' : '#ea580c';
+    const r7el = document.getElementById('s-rev-7d');
+    if (r7el) { r7el.textContent = '$' + rev7.toLocaleString(); r7el.style.color = revCol7; }
+    if (pRev7 !== null) {
+      const diff = rev7 - pRev7;
+      const arr  = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+      const tc   = diff > 0 ? '#22c55e' : diff < 0 ? '#f87171' : 'var(--text3)';
+      const rt7el = document.getElementById('s-rev-7d-trend');
+      if (rt7el) { rt7el.textContent = arr + ' $' + Math.abs(diff).toLocaleString() + ' vs prev 7d'; rt7el.style.color = tc; }
+    }
+    set('s-rev-7d-sub', 'last ' + n7 + ' days excl. today');
+  }
 }
 
 function updateCharts() {

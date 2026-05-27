@@ -95,15 +95,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 /* standard cell content */
 .hm-day{font-size:clamp(.7rem,1.1vw,.9rem);color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace;line-height:1;font-weight:500}
-.hm-enc{font-size:clamp(1rem,1.6vw,1.4rem);font-weight:800;line-height:1.1;margin-top:3px}
+.hm-enc{font-size:clamp(1.1rem,1.8vw,1.6rem);font-weight:800;line-height:1.1;margin-top:3px;color:#fff}
 .hm-cell.today .hm-day{color:#22c55e}
 
 /* TARGET MET cell */
 .hm-cell.target-met{border-radius:8px}
 .hm-cell.target-met .hm-day{color:rgba(0,0,0,.5)!important}
-.hm-cell.target-met .hm-enc{font-size:clamp(1rem,1.6vw,1.4rem);font-weight:800;color:#fff}
-.hm-cell.target-met .hm-check{font-size:clamp(.65rem,1vw,.82rem);font-weight:800;color:rgba(0,0,0,.72);margin-top:2px;line-height:1.2}
-.hm-cell.target-met .hm-rev{font-size:clamp(.58rem,.9vw,.72rem);color:rgba(0,0,0,.58);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.hm-rev{font-size:clamp(.72rem,1.1vw,.9rem);font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:3px;line-height:1.1}
+.hm-check{font-size:clamp(.62rem,.95vw,.78rem);font-weight:700;margin-top:2px;line-height:1.2}
+
+
 
 /* tooltip */
 .hm-cell .hm-tip{
@@ -384,7 +385,7 @@ const CSV_FALLBACK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0D1R
 
 // ── RATES & GOALS ─────────────────────────────────────────────────────────────
 const RATES = { rh:12, td_phone:23, td_video:28, mdl_phone:25, mdl_video:28, mdl_async:12.50 };
-const GOALS = { rh:167, td:10, mdl:15, dayRev:2000, moRev:60000 };
+const GOALS = { rh:167, td:10, mdl:10, dayRev:2000, moRev:60000 };
 
 let ALL_DATA = {};
 let revChart = null, histChart = null;

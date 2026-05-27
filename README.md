@@ -77,44 +77,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 /* heatmap cells */
 .hm-cell{
-  border-radius:6px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  cursor:default;transition:transform .15s,box-shadow .15s;
-  position:relative;padding:6px 4px;
-  min-height:82px;
+  border-radius:8px;
+  cursor:default;transition:transform .12s,box-shadow .12s;
+  position:relative;
+  min-height:90px;
 }
-.hm-cell:hover{transform:scale(1.05);box-shadow:0 0 0 1.5px rgba(255,255,255,.25);z-index:2}
-.hm-cell.today{box-shadow:0 0 0 2.5px #22c55e!important}
+.hm-cell:hover{transform:scale(1.07);box-shadow:0 0 0 2.5px rgba(255,255,255,.5);z-index:10}
+.hm-cell.today{box-shadow:0 0 0 2.5px #fff!important}
 .hm-cell.empty{background:#111827!important;cursor:default}
-/* Future days — clearly grayed, dashed border, no data */
-.hm-cell.future{
-  background:#0f172a!important;cursor:default;
-  border:1px dashed rgba(255,255,255,.1)!important;
+.hm-cell.future{background:#0f172a!important;cursor:default;border:1px dashed rgba(255,255,255,.08)!important}
+.hm-cell.future .hm-day{color:rgba(255,255,255,.18)!important}
+.hm-day{font-size:clamp(.65rem,1vw,.78rem);color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace;line-height:1;font-weight:500;align-self:center}
+.hm-enc{font-size:clamp(1.4rem,2.2vw,1.9rem);font-weight:900;line-height:1;color:#fff;margin-top:4px;letter-spacing:-.03em}
+.hm-rev{font-size:clamp(.62rem,.95vw,.76rem);font-weight:700;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.65);margin-top:5px}
+.hm-cell.today .hm-day{color:rgba(255,255,255,.9);font-weight:700}
+#hm-floating-tip{
+  display:none;position:fixed;
+  background:#1c2333;border:1px solid #334155;border-radius:10px;padding:10px 14px;
+  font-size:.7rem;color:#e2e8f0;white-space:nowrap;z-index:9999;pointer-events:none;
+  line-height:1.8;box-shadow:0 8px 32px rgba(0,0,0,.7);
 }
-.hm-cell.future .hm-day{color:rgba(255,255,255,.2)!important}
-
-/* standard cell content */
-.hm-day{font-size:clamp(.7rem,1.1vw,.9rem);color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace;line-height:1;font-weight:500}
-.hm-enc{font-size:clamp(1.1rem,1.8vw,1.6rem);font-weight:800;line-height:1.1;margin-top:3px;color:#fff}
-.hm-cell.today .hm-day{color:#22c55e}
-
-/* TARGET MET cell */
-.hm-cell.target-met{border-radius:8px}
-.hm-cell.target-met .hm-day{color:rgba(0,0,0,.5)!important}
-.hm-rev{font-size:clamp(.72rem,1.1vw,.9rem);font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:3px;line-height:1.1}
-.hm-check{font-size:clamp(.62rem,.95vw,.78rem);font-weight:700;margin-top:2px;line-height:1.2}
-
-
-
-/* tooltip */
-.hm-cell .hm-tip{
-  display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:#1c2333;border:1px solid #2d3a50;border-radius:8px;padding:8px 12px;
-  font-size:.68rem;color:var(--text);white-space:nowrap;z-index:20;pointer-events:none;
-  line-height:1.7;box-shadow:0 8px 24px rgba(0,0,0,.5);
-}
-.hm-cell:hover .hm-tip{display:block}
-.hm-cell:hover .hm-tooltip{display:block}
 
 .footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:10px 28px;font-size:.64rem;color:var(--text3)}
 
@@ -175,6 +157,49 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 <div class="dash">
 
+  <!-- TOP BAR: TODAY VS TARGET -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
+      <span style="font-size:.58rem;text-transform:uppercase;letter-spacing:.13em;color:var(--text3);font-weight:600">Most Recent Day vs Target</span>
+      <span style="font-size:.65rem;color:var(--text3)" id="gs-days-note">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <!-- Roman Health -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Roman Health</span>
+          <span style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em" id="gs-rh-pct">—</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-bottom:5px">
+          <div id="gs-rh-fill" style="height:100%;border-radius:4px;transition:width .9s ease;width:0"></div>
+        </div>
+        <span style="font-size:.65rem;color:var(--text3)" id="gs-rh-val">—</span>
+      </div>
+      <!-- Teladoc -->
+      <div style="border-left:1px solid var(--border);padding-left:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Teladoc</span>
+          <span style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em" id="gs-td-pct">—</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-bottom:5px">
+          <div id="gs-td-fill" style="height:100%;border-radius:4px;transition:width .9s ease;width:0"></div>
+        </div>
+        <span style="font-size:.65rem;color:var(--text3)" id="gs-td-val">—</span>
+      </div>
+      <!-- MDLive -->
+      <div style="border-left:1px solid var(--border);padding-left:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">MDLive</span>
+          <span style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em" id="gs-mdl-pct">—</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin-bottom:5px">
+          <div id="gs-mdl-fill" style="height:100%;border-radius:4px;transition:width .9s ease;width:0"></div>
+        </div>
+        <span style="font-size:.65rem;color:var(--text3)" id="gs-mdl-val">—</span>
+      </div>
+    </div>
+  </div>
+
   <!-- SUMMARY STRIP -->
   <div>
     <div class="sec-hd"><span class="sec-label">Rolling 30 Days — At a Glance</span></div>
@@ -210,64 +235,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
-  <!-- TODAY VS TARGET -->
-  <div>
-    <div class="sec-hd">
-      <span class="sec-label">Most Recent Day vs Target</span>
-      <span class="sec-note" id="gs-days-note">—</span>
-    </div>
-    <div class="gs-row">
-      <div class="gs-pill">
-        <div class="gs-pill-top">
-          <span class="gs-pill-name">Roman Health</span>
-          <span class="gs-pill-pct" id="gs-rh-pct" style="color:var(--rh)">—</span>
-        </div>
-        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-rh-fill" style="background:var(--rh)"></div></div>
-        <span class="gs-pill-val" id="gs-rh-val">—</span>
-      </div>
-      <div class="gs-pill">
-        <div class="gs-pill-top">
-          <span class="gs-pill-name">Teladoc</span>
-          <span class="gs-pill-pct" id="gs-td-pct" style="color:var(--td)">—</span>
-        </div>
-        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-td-fill" style="background:var(--td)"></div></div>
-        <span class="gs-pill-val" id="gs-td-val">—</span>
-      </div>
-      <div class="gs-pill">
-        <div class="gs-pill-top">
-          <span class="gs-pill-name">MDLive</span>
-          <span class="gs-pill-pct" id="gs-mdl-pct" style="color:var(--mdl)">—</span>
-        </div>
-        <div class="gs-pill-track"><div class="gs-pill-fill" id="gs-mdl-fill" style="background:var(--mdl)"></div></div>
-        <span class="gs-pill-val" id="gs-mdl-val">—</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- DAILY REVENUE BAR -->
-  <div>
-    <div class="sec-hd">
-      <span class="sec-label">Most Recent Day Revenue</span>
-      <span class="sec-note" id="today-line">—</span>
-    </div>
-    <div class="rev-wrap">
-      <div class="rev-hd">
-        <div class="rev-hd-left">
-          <span class="rev-title">Daily Revenue</span>
-          <span class="rev-achieved" id="t-rev-amt" style="color:var(--rev)">$0</span>
-        </div>
-        <div class="rev-hd-right">
-          <span class="rev-goal-label">Daily Goal</span>
-          <span class="rev-goal-val">$2,000</span>
-          <span class="rev-pct-pill" id="t-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
-        </div>
-      </div>
-      <div class="rev-track">
-        <div class="rev-fill" id="t-rev-fill" style="width:0%"></div>
-      </div>
-      <div class="rev-ends"><span>$0</span><span>$2,000</span></div>
-    </div>
-  </div>
 
   <!-- CHARTS ROW -->
   <div>
@@ -299,14 +267,36 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
-  <!-- 30-DAY ROLLING REVENUE GOAL -->
+  <!-- COMBINED REVENUE CARD -->
   <div>
     <div class="sec-hd">
-      <span class="sec-label">Rolling 30-Day Revenue vs Goal</span>
-      <span class="sec-note" id="goals-note">last 30 days</span>
+      <span class="sec-label">Revenue</span>
+      <span class="sec-note" id="today-line">—</span>
     </div>
     <div class="rev-wrap">
-      <div class="rev-hd">
+
+      <!-- Daily row -->
+      <div class="rev-hd" style="margin-bottom:8px">
+        <div class="rev-hd-left">
+          <span class="rev-title">Daily Revenue</span>
+          <span class="rev-achieved" id="t-rev-amt" style="color:var(--rev)">$0</span>
+        </div>
+        <div class="rev-hd-right">
+          <span class="rev-goal-label">Daily Goal</span>
+          <span class="rev-goal-val">$2,000</span>
+          <span class="rev-pct-pill" id="t-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
+        </div>
+      </div>
+      <div class="rev-track">
+        <div class="rev-fill" id="t-rev-fill" style="width:0%"></div>
+      </div>
+      <div class="rev-ends" style="margin-bottom:20px"><span>$0</span><span>$2,000</span></div>
+
+      <!-- Divider -->
+      <div style="border-top:1px solid var(--border);margin-bottom:20px"></div>
+
+      <!-- 30-day row -->
+      <div class="rev-hd" style="margin-bottom:8px">
         <div class="rev-hd-left">
           <span class="rev-title">Rolling 30-Day Revenue</span>
           <span class="rev-achieved" id="g-rev-amt" style="color:var(--rev)">$0</span>
@@ -321,6 +311,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         <div class="rev-fill" id="g-rev-fill" style="width:0%"></div>
       </div>
       <div class="rev-ends"><span>$0</span><span>$60,000</span></div>
+      <div style="font-size:.6rem;color:var(--text3);margin-top:4px;text-align:right" id="goals-note">last 30 days</div>
+
     </div>
   </div>
 
@@ -369,6 +361,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
 </div>
 
+<div id="hm-floating-tip"></div>
 <div class="footer">
   <span>Last refreshed: <span id="last-updated">—</span></span>
   <span id="data-as-of">—</span>
@@ -562,7 +555,12 @@ function parseSheetCSV(text, tabName) {
     // Date info
     month: sm,
     year:  sy,
-    dateCols: dateCols.slice(0, t),  // keep for accurate date comparisons
+    dateCols:  dateCols.slice(0, t),
+    td_phone:  td_phone.slice(0, t),
+    td_video:  td_video.slice(0, t),
+    mdl_phone: mdl_phone.slice(0, t),
+    mdl_video: mdl_video.slice(0, t),
+    mdl_async: mdl_async.slice(0, t),
   };
 }
 
@@ -1098,15 +1096,18 @@ function updateHeatmap() {
   cur.labels.forEach((label, i) => {
     const p = label.split('/');
     if (p.length < 2) return;
-    const d = +p[1];
-    const enc = (cur.rh[i]||0) + (cur.td[i]||0) + (cur.mdl[i]||0);
-    const rev = ((cur.rhRev||[])[i]||0) + ((cur.tdRev||[])[i]||0) + ((cur.mdlRev||[])[i]||0);
-    if (enc > 0 || rev > 0) dayMap[d] = {
-      enc, rev,
-      rh:  cur.rh[i]||0,
-      td:  cur.td[i]||0,
-      mdl: cur.mdl[i]||0,
-    };
+    const d      = +p[1];
+    const rh     = cur.rh[i]  || 0;
+    const td     = cur.td[i]  || 0;
+    const mdl    = cur.mdl[i] || 0;
+    const enc    = rh + td + mdl;
+    const rev    = ((cur.rhRev||[])[i]||0) + ((cur.tdRev||[])[i]||0) + ((cur.mdlRev||[])[i]||0);
+    const tdPh   = (cur.td_phone ||[])[i] || 0;
+    const tdVid  = (cur.td_video ||[])[i] || 0;
+    const mdlPh  = (cur.mdl_phone||[])[i] || 0;
+    const mdlVid = (cur.mdl_video||[])[i] || 0;
+    const mdlAsy = (cur.mdl_async||[])[i] || 0;
+    if (enc > 0 || rev > 0) dayMap[d] = { enc, rh, td, mdl, rev, tdPh, tdVid, mdlPh, mdlVid, mdlAsy };
   });
 
   const maxEnc = Math.max(...Object.values(dayMap).map(d => d.enc), 1);
@@ -1146,76 +1147,112 @@ function updateHeatmap() {
     const encCol = '#fff';
 
     if (data) {
-      const revStatus = data.rev >= 2000
+      const _tipRevColor = data.rev >= 2000 ? '#22c55e' : data.rev >= 1500 ? '#f5a623' : '#f87171';
+            const revStatus = data.rev >= 2000
         ? `<span style="color:#22c55e">✓ $${(data.rev-2000).toLocaleString()} over $2k goal</span>`
         : data.rev >= 1500
           ? `<span style="color:#f5a623">$${(2000-data.rev).toLocaleString()} short of $2k goal</span>`
           : `<span style="color:#f87171">$${(2000-data.rev).toLocaleString()} below $2k goal</span>`;
-      const tip = `<div class="hm-tip">
-        <strong style="color:var(--text)">${moShort[cur.month-1]} ${day}${isToday ? ' · Today' : ''}</strong><br>
-        <span style="color:#2dd4a0">Roman Health: ${data.rh}</span><br>
-        <span style="color:#7b9ef0">Teladoc: ${data.td}</span><br>
-        <span style="color:#f5a623">MDLive: ${data.mdl}</span><br>
-        <strong style="color:var(--text)">Total: ${data.enc} encounters</strong><br>
-        <strong style="color:var(--text)">Revenue: $${data.rev.toLocaleString()}</strong><br>
-        ${revStatus}
-      </div>`;
 
-      // Rich cell content for all data days
-      const totalEnc = data.enc;
-      const isGreen  = data.rev >= 2000;
-      const isOrange = data.rev >= 1500 && data.rev < 2000;
-      const tc       = 'rgba(255,255,255,';
-      const dc       = 'rgba(0,0,0,';
-      const base     = textDark ? dc : tc;
+      const tdLines = [
+        data.tdPh  > 0 ? `&nbsp;&nbsp;📞 Phone: ${data.tdPh}` : '',
+        data.tdVid > 0 ? `&nbsp;&nbsp;🎥 Video: ${data.tdVid}` : '',
+      ].filter(Boolean).join('<br>');
+      const mdlLines = [
+        data.mdlPh  > 0 ? `&nbsp;&nbsp;📞 Phone: ${data.mdlPh}` : '',
+        data.mdlVid > 0 ? `&nbsp;&nbsp;🎥 Video: ${data.mdlVid}` : '',
+        data.mdlAsy > 0 ? `&nbsp;&nbsp;⚡ Async: ${data.mdlAsy}` : '',
+      ].filter(Boolean).join('<br>');
 
-      // Status line
-      let statusLine = '';
-      if (isGreen) {
-        const overRev = data.rev - 2000;
-        statusLine = `<div style="font-size:.6rem;font-weight:700;color:${textDark?dc+'0.6)':tc+'0.85)'};margin-top:1px">✓ +$${overRev.toLocaleString()}</div>`;
-      } else if (isOrange) {
-        const needed = 2000 - data.rev;
-        statusLine = `<div style="font-size:.58rem;color:${tc+'0.7)'};margin-top:1px">$${needed.toLocaleString()} to goal</div>`;
-      } else {
-        const needed = 2000 - data.rev;
-        statusLine = `<div style="font-size:.58rem;color:${tc+'0.6)'};margin-top:1px">$${needed.toLocaleString()} to goal</div>`;
-      }
+      // Store tooltip content as data attribute for mouseover handler
+      const tipHTML =
+        `<strong style="color:#f1f5f9">${moShort[cur.month-1]} ${day}${isToday ? ' · Today' : ''}</strong>` +
+        `<div style="border-top:1px solid rgba(255,255,255,.15);margin:5px 0 4px"></div>` +
+        `<span style="color:#2dd4a0;font-weight:600">Roman Health: ${data.rh}</span><br>` +
+        `<span style="color:#7b9ef0;font-weight:600">Teladoc: ${data.td}</span>` +
+          (data.tdPh  > 0 ? `<br><span style="color:#7b9ef0;opacity:.75">&nbsp;&nbsp;Phone: ${data.tdPh}</span>` : '') +
+          (data.tdVid > 0 ? `<br><span style="color:#7b9ef0;opacity:.75">&nbsp;&nbsp;Video: ${data.tdVid}</span>` : '') +
+        `<br><span style="color:#f5a623;font-weight:600">MDLive: ${data.mdl}</span>` +
+          (data.mdlPh  > 0 ? `<br><span style="color:#f5a623;opacity:.75">&nbsp;&nbsp;Phone: ${data.mdlPh}</span>` : '') +
+          (data.mdlVid > 0 ? `<br><span style="color:#f5a623;opacity:.75">&nbsp;&nbsp;Video: ${data.mdlVid}</span>` : '') +
+          (data.mdlAsy > 0 ? `<br><span style="color:#f5a623;opacity:.75">&nbsp;&nbsp;Async: ${data.mdlAsy}</span>` : '') +
+        `<div style="border-top:1px solid rgba(255,255,255,.15);margin:5px 0 4px"></div>` +
+        `<span style="color:#f1f5f9">Total: <strong>${data.enc}</strong> &nbsp;·&nbsp; <strong>$${data.rev.toLocaleString()}</strong></span><br>` +
+        revStatus;
+      const tip = '';  // unused, tooltip via mouseover
+      cell.setAttribute('data-tip', tipHTML);
 
-      // Shape icons: circle=RH, square=TD, diamond=MDL
-      // White shapes with dark number inside — readable on any background
-      const mkShape = (val, shape) => {
-        if (!val) return '';
-        const styles = {
-          circle:  'width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;font-size:.52rem;font-weight:800;color:#1a1a1a;flex-shrink:0',
-          square:  'width:18px;height:18px;border-radius:3px;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;font-size:.52rem;font-weight:800;color:#1a1a1a;flex-shrink:0',
-          diamond: 'width:18px;height:18px;border-radius:2px;transform:rotate(45deg);background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0',
-        };
-        if (shape === 'diamond') {
-          return `<div style="${styles.diamond}"><span style="transform:rotate(-45deg);font-size:.52rem;font-weight:800;color:#1a1a1a;display:block">${val}</span></div>`;
-        }
-        return `<div style="${styles[shape]}">${val}</div>`;
+      // ── Cell layout ───────────────────────────────────────────────────────
+      const sz = '20px';
+      const mkIcon = (val, shape) => {
+        if (!val || val === 0) return '';
+        const fs = val >= 100 ? '.48rem' : val >= 10 ? '.54rem' : '.6rem';
+        if (shape === 'circle')
+          return `<div style="width:${sz};height:${sz};border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:${fs};font-weight:900;color:#000;line-height:1">${val}</span></div>`;
+        if (shape === 'square')
+          return `<div style="width:${sz};height:${sz};border-radius:3px;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:${fs};font-weight:900;color:#000;line-height:1">${val}</span></div>`;
+        if (shape === 'diamond')
+          return `<div style="width:${sz};height:${sz};border-radius:2px;transform:rotate(45deg);background:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><span style="transform:rotate(-45deg);font-size:${fs};font-weight:900;color:#000;line-height:1;display:block">${val}</span></div>`;
+        return '';
       };
 
-      cell.innerHTML = `${tip}
-        <div class="hm-day" style="color:${base+'0.45)'};">${day}</div>
-        <div class="hm-enc" style="color:${encCol}">${totalEnc}</div>
-        <div style="display:flex;gap:3px;margin-top:3px;justify-content:center;align-items:center">
-          ${mkShape(data.rh,  'circle')}
-          ${mkShape(data.td,  'square')}
-          ${mkShape(data.mdl, 'diamond')}
-        </div>
-        ${statusLine}
-        <div class="hm-rev" style="color:${base+'0.65)'}">$${data.rev.toLocaleString()}</div>`;
+      const revColor  = data.rev >= 2000 ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.7)';
+      const overAmt   = data.rev - 2000;
+      const overText  = overAmt >= 0
+        ? `<span style="font-size:.55rem;color:rgba(255,255,255,.65)">+$${overAmt.toLocaleString()}</span>`
+        : `<span style="font-size:.55rem;color:rgba(255,255,255,.5)">-$${Math.abs(overAmt).toLocaleString()}</span>`;
+
+      const iconRow = [mkIcon(data.rh,'circle'), mkIcon(data.td,'square'), mkIcon(data.mdl,'diamond')]
+        .filter(Boolean).join('');
+
+      cell.innerHTML = `
+        <div style="display:flex;flex-direction:column;height:100%;padding:5px 6px;box-sizing:border-box;min-height:90px">
+          <div style="text-align:right;font-size:.65rem;font-weight:600;color:rgba(255,255,255,.75);line-height:1">${day}</div>
+          <div style="text-align:center;font-size:clamp(1.2rem,2vw,1.6rem);font-weight:900;color:#fff;line-height:1.1;margin:3px 0 2px">${data.enc}</div>
+          <div style="display:flex;gap:3px;justify-content:center;align-items:center;margin-bottom:3px">${iconRow}</div>
+          <div style="text-align:center;line-height:1.3;margin-top:auto">
+            <div style="font-size:.62rem;font-weight:700;color:${revColor}">$${data.rev.toLocaleString()}</div>
+            ${overText}
+          </div>
+        </div>`;
     } else if (isFuture) {
-      // Future day — dashed outline, day number only, clearly not-yet
-      cell.innerHTML = `<div class="hm-day">${day}</div>`;
+      cell.innerHTML = `<div style="text-align:right;padding:5px 6px;font-size:.68rem;font-weight:600;color:rgba(255,255,255,.18)">${day}</div>`;
     } else {
-      // Past day with no data logged
-      cell.innerHTML = `<div class="hm-day" style="color:rgba(255,255,255,.22)">${day}</div>`;
+      cell.innerHTML = `<div style="text-align:right;padding:5px 6px;font-size:.68rem;font-weight:600;color:rgba(255,255,255,.22)">${day}</div>`;
     }
 
     grid.appendChild(cell);
+  }
+
+  // Populate 7-day avg strip
+  const last7h  = getRollingN(7,  true);
+  const prev7h  = getRollingN(14, true).slice(0, 7);
+  if (last7h.length) {
+    const n7 = last7h.length;
+    const enc7 = Math.round(last7h.reduce((a,d) => a+d.rh+d.td+d.mdl, 0) / n7);
+    const rev7 = Math.round(last7h.reduce((a,d) => a+d.rhRev+d.tdRev+d.mdlRev, 0) / n7);
+    const pEnc7 = prev7h.length ? Math.round(prev7h.reduce((a,d) => a+d.rh+d.td+d.mdl, 0) / prev7h.length) : null;
+    const pRev7 = prev7h.length ? Math.round(prev7h.reduce((a,d) => a+d.rhRev+d.tdRev+d.mdlRev, 0) / prev7h.length) : null;
+    const encCol7 = enc7 >= 167 ? '#22c55e' : '#ea580c';
+    const revCol7 = rev7 >= 2000 ? '#22c55e' : '#ea580c';
+    const eEl = document.getElementById('cal-7d-enc');
+    if (eEl) { eEl.textContent = enc7.toLocaleString(); eEl.style.color = encCol7; }
+    const rEl = document.getElementById('cal-7d-rev');
+    if (rEl) { rEl.textContent = '$' + rev7.toLocaleString(); rEl.style.color = revCol7; }
+    if (pEnc7 !== null) {
+      const d = enc7 - pEnc7, arr = d > 0 ? '↑' : d < 0 ? '↓' : '→', tc = d > 0 ? '#22c55e' : d < 0 ? '#f87171' : 'rgba(255,255,255,.4)';
+      const etEl = document.getElementById('cal-7d-enc-trend');
+      if (etEl) { etEl.textContent = arr + ' ' + Math.abs(d) + ' vs prior 7d'; etEl.style.color = tc; }
+      const rh7 = Math.round(last7h.reduce((a,d)=>a+d.rh,0)/n7);
+      const td7 = Math.round(last7h.reduce((a,d)=>a+d.td,0)/n7);
+      const ml7 = Math.round(last7h.reduce((a,d)=>a+d.mdl,0)/n7);
+      set('cal-7d-enc-sub', 'RH ~' + rh7 + ' · TD ~' + td7 + ' · MDL ~' + ml7);
+    }
+    if (pRev7 !== null) {
+      const d = rev7 - pRev7, arr = d > 0 ? '↑' : d < 0 ? '↓' : '→', tc = d > 0 ? '#22c55e' : d < 0 ? '#f87171' : 'rgba(255,255,255,.4)';
+      const rtEl = document.getElementById('cal-7d-rev-trend');
+      if (rtEl) { rtEl.textContent = arr + ' $' + Math.abs(d).toLocaleString() + ' vs prior 7d'; rtEl.style.color = tc; }
+    }
   }
 }
 
@@ -1255,16 +1292,12 @@ function parseAll(text) {
   return p;
 }
 
-// ── FETCH ─────────────────────────────────────────────────────────────────────
 async function loadSheet(bg=false) {
   if (!bg) {
     const c = loadCacheObj();
     if (c) { try { const p = parseAll(c.text); if (Object.keys(p).length) { ALL_DATA=p; updateAll(); set('live-label','Cached · '+c.age+'m ago'); }} catch(e){} }
   }
-
-  // Try Apps Script first, fall back to plain CSV
   const urls = [APPS_SCRIPT_URL + '?_=' + Date.now(), CSV_FALLBACK_URL + '&_=' + Date.now()];
-
   for (const url of urls) {
     try {
       const r = await fetch(url, { cache:'no-store', redirect:'follow' });
@@ -1279,19 +1312,39 @@ async function loadSheet(bg=false) {
       document.getElementById('live-dot').classList.add('on');
       set('live-label', 'Live · ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
       set('last-updated', new Date().toLocaleTimeString());
-      return; // success — stop trying URLs
+      return;
     } catch(e) {
-      console.warn('fetch failed (' + url.slice(0,40) + '…):', e.message);
+      console.warn('fetch failed:', e.message);
     }
   }
-
-  // Both failed
   document.getElementById('live-dot').classList.remove('on');
   set('live-label', 'Unavailable · using cache');
   set('last-updated', 'Failed');
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── Floating calendar tooltip ─────────────────────────────────────────────────
+(function() {
+  const ft = document.getElementById('hm-floating-tip');
+  if (!ft) return;
+  document.addEventListener('mouseover', e => {
+    const cell = e.target.closest('[data-tip]');
+    if (!cell) { ft.style.display = 'none'; return; }
+    ft.innerHTML = cell.getAttribute('data-tip');
+    ft.style.display = 'block';
+  });
+  document.addEventListener('mouseout', e => {
+    if (!e.target.closest('[data-tip]')) ft.style.display = 'none';
+  });
+  document.addEventListener('mousemove', e => {
+    if (ft.style.display === 'none') return;
+    const x = e.clientX, y = e.clientY;
+    const w = ft.offsetWidth, h = ft.offsetHeight;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    ft.style.left = (x + 14 + w > vw ? x - w - 10 : x + 14) + 'px';
+    ft.style.top  = (y - 10 + h > vh ? y - h + 10 : y - 10) + 'px';
+  });
+})();
+
 loadSheet();
 setInterval(() => loadSheet(true), 60000);
 

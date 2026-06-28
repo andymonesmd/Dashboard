@@ -283,14 +283,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         </div>
         <div class="rev-hd-right">
           <span class="rev-goal-label">Daily Goal</span>
-          <span class="rev-goal-val">$2,000</span>
+          <span class="rev-goal-val">$1,370</span>
           <span class="rev-pct-pill" id="t-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
         </div>
       </div>
       <div class="rev-track">
         <div class="rev-fill" id="t-rev-fill" style="width:0%"></div>
       </div>
-      <div class="rev-ends" style="margin-bottom:20px"><span>$0</span><span>$2,000</span></div>
+      <div class="rev-ends" style="margin-bottom:20px"><span>$0</span><span>$1,370</span></div>
 
       <!-- Divider -->
       <div style="border-top:1px solid var(--border);margin-bottom:20px"></div>
@@ -303,14 +303,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         </div>
         <div class="rev-hd-right">
           <span class="rev-goal-label">30-Day Goal</span>
-          <span class="rev-goal-val">$60,000</span>
+          <span class="rev-goal-val">$40,000</span>
           <span class="rev-pct-pill" id="g-rev-pct" style="color:var(--rev);border-color:var(--rev)">0%</span>
         </div>
       </div>
       <div class="rev-track">
         <div class="rev-fill" id="g-rev-fill" style="width:0%"></div>
       </div>
-      <div class="rev-ends"><span>$0</span><span>$60,000</span></div>
+      <div class="rev-ends"><span>$0</span><span>$40,000</span></div>
       <div style="font-size:.6rem;color:var(--text3);margin-top:4px;text-align:right" id="goals-note">last 30 days</div>
 
     </div>
@@ -320,7 +320,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <div>
     <div class="sec-hd">
       <span class="sec-label" id="heatmap-label">Encounter Heatmap — Current Month</span>
-      <span class="sec-note">green ≥$2k · orange $1.5k–$2k · red &lt;$1.5k &nbsp;·&nbsp; ⬤ Roman &nbsp;■ Teladoc &nbsp;◆ MDLive</span>
+      <span class="sec-note">green ≥$1.37k · orange $1k–$1.37k · red &lt;$1k &nbsp;·&nbsp; ⬤ Roman &nbsp;■ Teladoc &nbsp;◆ MDLive</span>
     </div>
     <div class="chart-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -337,7 +337,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
             <div style="width:1px;height:16px;background:rgba(255,255,255,.15);margin:0 2px"></div>
             <div title="$2,000+ goal met" style="width:16px;height:16px;border-radius:3px;background:#22c55e;border:1px solid rgba(255,255,255,.06)"></div>
           </div>
-          <span>✓ $2,000+</span>
+          <span>✓ $1,370+</span>
         </div>
       </div>
 
@@ -378,7 +378,7 @@ const CSV_FALLBACK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0D1R
 
 // ── RATES & GOALS ─────────────────────────────────────────────────────────────
 const RATES = { rh:12, td_phone:23, td_video:28, mdl_phone:25, mdl_video:28, mdl_async:12.50 };
-const GOALS = { rh:167, td:10, mdl:10, dayRev:2000, moRev:60000 };
+const GOALS = { rh:167, td:10, mdl:10, dayRev:1370, moRev:40000 };
 
 let ALL_DATA = {};
 let revChart = null, histChart = null;
@@ -1065,10 +1065,10 @@ function updateHistChart() {
 // At/over target: graduated greens, brighter = further over.
 function encToColor(rev) {
   if (rev === 0) return { bg:'#0d1117', textDark:false };
-  if (rev >= 2000) return { bg:'#22c55e', textDark:false };   // ≥$2,000 — green
-  if (rev >= 1500) return { bg:'#ea580c', textDark:false };   // $1,500–$1,999 — orange
-  // Below $1,500 — red gradient
-  const pct = rev / 1500;
+  if (rev >= 1370) return { bg:'#22c55e', textDark:false };   // ≥$1,370 — green
+  if (rev >= 1000) return { bg:'#ea580c', textDark:false };   // $1,000–$1,369 — orange
+  // Below $1,000 — red gradient
+  const pct = rev / 1000;
   if (pct < 0.20) return { bg:'#450a0a', textDark:false };
   if (pct < 0.40) return { bg:'#7f1d1d', textDark:false };
   if (pct < 0.60) return { bg:'#991b1b', textDark:false };
@@ -1148,11 +1148,11 @@ function updateHeatmap() {
 
     if (data) {
       const _tipRevColor = data.rev >= 2000 ? '#22c55e' : data.rev >= 1500 ? '#f5a623' : '#f87171';
-            const revStatus = data.rev >= 2000
-        ? `<span style="color:#22c55e">✓ $${(data.rev-2000).toLocaleString()} over $2k goal</span>`
-        : data.rev >= 1500
-          ? `<span style="color:#f5a623">$${(2000-data.rev).toLocaleString()} short of $2k goal</span>`
-          : `<span style="color:#f87171">$${(2000-data.rev).toLocaleString()} below $2k goal</span>`;
+            const revStatus = data.rev >= 1370
+        ? `<span style="color:#22c55e">✓ $${(data.rev-1370).toLocaleString()} over $1,370 goal</span>`
+        : data.rev >= 1000
+          ? `<span style="color:#f5a623">$${(1370-data.rev).toLocaleString()} short of $1,370 goal</span>`
+          : `<span style="color:#f87171">$${(1370-data.rev).toLocaleString()} below $1,370 goal</span>`;
 
       const tdLines = [
         data.tdPh  > 0 ? `&nbsp;&nbsp;📞 Phone: ${data.tdPh}` : '',
@@ -1196,8 +1196,8 @@ function updateHeatmap() {
         return '';
       };
 
-      const revColor  = data.rev >= 2000 ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.7)';
-      const overAmt   = data.rev - 2000;
+      const revColor  = data.rev >= 1370 ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.7)';
+      const overAmt   = data.rev - 1370;
       const overText  = overAmt >= 0
         ? `<span style="font-size:.55rem;color:rgba(255,255,255,.65)">+$${overAmt.toLocaleString()}</span>`
         : `<span style="font-size:.55rem;color:rgba(255,255,255,.5)">-$${Math.abs(overAmt).toLocaleString()}</span>`;
